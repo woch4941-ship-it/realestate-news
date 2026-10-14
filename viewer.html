@@ -20,8 +20,8 @@ a{color:inherit;text-decoration:none}
 a:hover{color:var(--accent)}
 header{position:sticky;top:0;z-index:5;background:var(--panel);border-bottom:1px solid var(--line)}
 .bar{max-width:1120px;margin:0 auto;padding:12px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-.brand{font-weight:800;font-size:18px;letter-spacing:-.3px;margin-right:auto}
-.brand small{display:block;font-weight:500;font-size:12px;color:var(--muted)}
+.brand{font-weight:800;font-size:26px;letter-spacing:-.6px;line-height:1.25;margin-right:auto}
+.brand small{display:block;font-weight:500;font-size:13px;letter-spacing:0;color:var(--muted);margin-top:2px}
 .datenav{display:flex;gap:6px;align-items:center}
 button,select,input{font:inherit;color:inherit}
 .btn{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 10px;cursor:pointer}
@@ -60,7 +60,19 @@ ol.keysent li{margin:6px 0}
 .art .snip{color:var(--muted);font-size:14px;margin:4px 0 0}
 details.others summary{cursor:pointer;color:var(--muted);font-size:12.5px;margin-top:6px}
 details.others ul{margin:6px 0 0;padding-left:18px;font-size:13.5px}
+.sigs{display:flex;flex-direction:column;gap:10px;margin:6px 0}
 .sig{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.sig .signame{flex:none;width:76px;color:var(--ink);font-weight:700;font-size:13px}
+.sig .end{flex:none;font-size:12px}
+.sig .siglab{flex:none;width:150px;color:var(--ink);font-weight:600}
+.sig .siglab small{font-weight:400;color:var(--muted)}
+.pos{color:var(--up)} .neg{color:var(--down)}
+.sig .end.pos,.sig .siglab.pos{color:var(--up)} .sig .end.neg,.sig .siglab.neg{color:var(--down)}
+.evh{font-weight:700;font-size:13px;margin:10px 0 2px}
+.method dl{margin:0} .method dt{font-weight:700;margin-top:14px} .method dt:first-child{margin-top:0}
+.method dd{margin:4px 0 0;color:var(--muted);font-size:13.5px;line-height:1.75}
+.method dd b{color:var(--ink);font-weight:600} .method ul{margin:4px 0;padding-left:18px}
+.method table.mt{margin:8px 0;font-size:13px} .method table.mt td,.method table.mt th{white-space:normal}
 .sigbar{position:relative;flex:1;height:8px;border-radius:4px;background:linear-gradient(90deg,var(--down),var(--line) 50%,var(--up))}
 .sigbar i{position:absolute;top:-4px;width:4px;height:16px;border-radius:2px;background:var(--ink);transform:translateX(-2px)}
 .kwcard h3{margin:0 0 6px;font-size:15px}
@@ -81,7 +93,14 @@ svg text{fill:var(--ink);font-size:11px}
 .hm td{text-align:center;padding:4px;font-size:11.5px}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:8px 14px;border-radius:8px;font-size:13px;opacity:0;transition:.2s}
 .toast.on{opacity:1}
-@media (max-width:600px){ .art .rk{width:18px;font-size:15px} .brand{font-size:16px;width:100%} .datenav{width:100%} .datenav select{flex:1;min-width:0;width:0;max-width:none} .art .t{font-size:15px} .card{padding:14px} .grid2{grid-template-columns:1fr} }
+.btn.admin{border-color:var(--accent);color:var(--accent);font-weight:600}
+dialog.trig{border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);padding:20px;width:min(360px,calc(100vw - 32px))}
+dialog.trig::backdrop{background:rgba(0,0,0,.35)}
+dialog.trig h3{margin:0 0 6px;font-size:16px}
+dialog.trig input{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:9px 12px;margin:10px 0}
+dialog.trig .row{display:flex;gap:8px;justify-content:flex-end}
+dialog.trig .st{font-size:13px;color:var(--muted);min-height:20px;margin:8px 0 0;white-space:pre-line}
+@media (max-width:600px){ .art .rk{width:18px;font-size:15px} .brand{font-size:22px;width:100%} .datenav{width:100%} .datenav select{flex:1;min-width:0;width:0;max-width:none} .art .t{font-size:15px} .card{padding:14px} .sig{flex-wrap:wrap} .sig .signame{width:100%} .sig .siglab{width:100%} .grid2{grid-template-columns:1fr} }
 </style>
 </head>
 <body>
@@ -93,6 +112,7 @@ svg text{fill:var(--ink);font-size:11px}
       <select id="dateSel"></select>
       <button class="btn" id="next" title="다음 날짜">▶</button>
       <button class="btn" id="latest">최신</button>
+      <button class="btn admin" id="collectNow" hidden title="지금 뉴스 수집 (관리자 전용)">⟳ 지금 수집</button>
     </div>
   </div>
   <nav class="tabs" id="tabs">
@@ -110,6 +130,8 @@ svg text{fill:var(--ink);font-size:11px}
 /* 웹에서는 매번 최신 목록을 받도록 캐시 방지 파라미터를 붙임 (파일로 열 때는 그대로) */
 window.IS_WEB = /^https?:$/.test(location.protocol);
 document.write('<script src="data/index.js' + (IS_WEB ? '?v=' + Date.now() : '') + '"><\/script>');
+/* "지금 수집" 버튼용 암호화된 GitHub 토큰 (비밀번호로만 복호화 가능, 없으면 버튼은 Actions 페이지로 안내) */
+if (IS_WEB) document.write('<script src="trigger-key.js?v=' + Date.now() + '"><\/script>');
 </script>
 <script>
 "use strict";
@@ -203,21 +225,102 @@ function textRank(items, k, groupKey) {
   return picked.map(i => ({ ...items[i], rank: r[i] }));
 }
 
-/* 시장 방향 신호: 상승·확대 vs 하락·위축 표현 비율 (사전 기반 분류기) */
-const UP = ['상승','오름','올라','오른','급등','반등','신고가','최고가','강세','과열','들썩','치솟','뛰었','뛴','폭등','증가','늘어','늘었','회복','개선','상향','호조','청신호','웃돈','품귀'];
-const DOWN = ['하락','내림','내려','떨어','급락','약세','침체','감소','줄어','줄었','축소','위축','최저','급감','미분양','냉각','둔화','폭락','꺾','악화','먹구름','하향','적신호','부진','한파','관망'];
-function countTerms(text, list) { let c = 0; for (const w of list) { let i = text.indexOf(w); while (i >= 0) { c++; i = text.indexOf(w, i + w.length); } } return c; }
-function articleSignal(a) {
-  const t = (a.title || '') + ' ' + (a.snippet || '');
-  const u = countTerms(t, UP), d = countTerms(t, DOWN);
-  return { u, d, v: (u + d) ? (u - d) / (u + d) : 0, has: (u + d) > 0 };
+/* ================================================================ 시장 지표 (규칙 기반 판정기)
+   한 구절 안에서 "대상(가격·물량·거래)"과 "방향(오름/내림, 늘어남/줄어듦)" 표현을 짝지어 판정한다.
+   지표는 시장(매매·전월세) × 종류(가격·물량·거래) = 6개. 근거 기사가 MIN_EVIDENCE(3)건 미만인 지표는 표시하지 않는다.
+   - 가격: 높아지면 상승(+), 낮아지면 하락(−)
+   - 물량·거래: 많아지면 증가(+), 적어지면 감소(−) */
+const KINDS = { 가격: { pos: '상승', neg: '하락' }, 물량: { pos: '증가', neg: '감소' }, 거래: { pos: '증가', neg: '감소' } };
+const ASPECTS = [['매매', '가격'], ['매매', '물량'], ['매매', '거래'], ['전월세', '가격'], ['전월세', '물량'], ['전월세', '거래']]
+  .map(([market, kind]) => ({ id: market + ' ' + kind, market, kind, ...KINDS[kind] }));
+// [표현, 종류, 시장(null이면 문맥으로 판단)] - 긴 표현부터 매칭
+const TARGETS = [
+  ['아파트 가격', '가격', '매매'], ['아파트값', '가격', '매매'], ['집값', '가격', '매매'], ['매매가격', '가격', '매매'], ['매매가', '가격', '매매'],
+  ['주택가격', '가격', '매매'], ['주택 가격', '가격', '매매'], ['분양가', '가격', '매매'], ['낙찰가율', '가격', '매매'], ['호가', '가격', '매매'],
+  ['전세가격', '가격', '전월세'], ['전세 가격', '가격', '전월세'], ['전셋값', '가격', '전월세'], ['전세가', '가격', '전월세'],
+  ['월셋값', '가격', '전월세'], ['월세', '가격', '전월세'], ['임대료', '가격', '전월세'], ['시세', '가격', null], ['가격', '가격', null], ['상승률', '가격', null], ['상승폭', '가격', null],
+  ['입주물량', '물량', null], ['입주 물량', '물량', null], ['미분양', '물량', '매매'], ['인허가', '물량', '매매'], ['착공', '물량', '매매'],
+  ['매물', '물량', null], ['물량', '물량', null], ['공급', '물량', null],
+  ['거래량', '거래', null], ['거래 건수', '거래', null], ['거래건수', '거래', null], ['매매 거래', '거래', '매매'], ['매매거래', '거래', '매매'],
+  ['매매액', '거래', '매매'], ['거래액', '거래', null], ['경쟁률', '거래', '매매'], ['거래', '거래', null]
+];
+// 대상과 방향이 한 단어에 들어 있는 표현
+const SELF = [['신고가', '가격', '매매', 1], ['최고가', '가격', null, 1], ['전세난', '물량', '전월세', -1], ['역전세', '가격', '전월세', -1], ['깡통전세', '가격', '전월세', -1], ['거래절벽', '거래', null, -1]];
+const POS = ['상승', '오름', '올라', '오른', '올랐', '오르', '급등', '반등', '강세', '들썩', '치솟', '뛰었', '뛴', '뛰어', '폭등', '상향', '높아', '높였',
+  '증가', '늘어', '늘었', '늘려', '늘린', '급증', '확대', '쌓여', '쌓이', '적체', '많아', '회복', '활발', '최대', '돌파', '↑'];
+const NEG = ['하락', '내림', '내려', '떨어', '급락', '약세', '하향', '낮아', '낮춰', '폭락', '꺾', '빠졌', '빠지', '감소', '줄어', '줄었', '줄여', '축소',
+  '급감', '씨 마르', '씨가 마르', '품귀', '최저', '위축', '적어', '뚝', '반토막', '실종', '가뭄', '절벽', '바닥', '↓'];
+const RENT_CTX = /전세|월세|전월세|임대차|세입자|임차/;
+const OPINION = /가능성|우려|전망|경고|예상|관측|조짐|기대|할 것|될 것|수 있|불안|\?/;
+const NEGATION = /^.{0,6}?(않|없|안 |못 )/;
+const STOPPED = /^.{0,6}?(멈|그치|그쳐|벗어|제동)/;
+
+function findAll(text, list, getWord) {
+  const hits = [];
+  for (const item of list) {
+    const w = getWord ? getWord(item) : item;
+    let i = text.indexOf(w);
+    while (i >= 0) { hits.push({ pos: i, end: i + w.length, item }); i = text.indexOf(w, i + 1); }
+  }
+  // 긴 표현 우선, 겹치는 짧은 표현 제거
+  hits.sort((a, b) => (b.end - b.pos) - (a.end - a.pos));
+  const kept = [];
+  for (const h of hits) if (!kept.some(k => h.pos < k.end && k.pos < h.end)) kept.push(h);
+  return kept.sort((a, b) => a.pos - b.pos);
 }
-function groupSignal(arts) {
-  let num = 0, den = 0, up = 0, down = 0;
-  for (const a of arts) { const s = articleSignal(a); up += s.u; down += s.d; if (s.has) { const w = Math.log(2 + (a.coverage || 1)); num += s.v * w; den += w; } }
-  return { v: den ? num / den : 0, up, down };
+function clauseSignals(clause) {
+  const out = [];
+  const opinion = OPINION.test(clause.replace(/전망지수|분양전망|전망치/g, ''));
+  const marketOf = m => m || (RENT_CTX.test(clause) ? '전월세' : '매매');
+  for (const h of findAll(clause, SELF, s => s[0])) {
+    out.push({ id: marketOf(h.item[2]) + ' ' + h.item[1], sign: h.item[3], w: opinion ? 0.4 : 1, opinion });
+  }
+  const targets = findAll(clause, TARGETS, t => t[0]).filter(t => !SELF.some(s => clause.slice(Math.max(0, t.pos - 3), t.end + 3).includes(s[0])));
+  if (!targets.length) return out;
+  const dirs = findAll(clause, [...POS.map(w => [w, 1]), ...NEG.map(w => [w, -1])], d => d[0]);
+  for (const d of dirs) {
+    // 가장 가까운 대상 (대상이 앞에 오는 "집값 상승" 형태를 우선, 최대 20자)
+    let best = null, bestDist = 21;
+    for (const t of targets) {
+      const dist = t.end <= d.pos ? d.pos - t.end : t.pos >= d.end ? t.pos - d.end + 4 : 0;
+      if (dist < bestDist) { best = t; bestDist = dist; }
+    }
+    if (!best) continue;
+    let sign = d.item[1], w = opinion ? 0.4 : 1;
+    const after = clause.slice(d.end, d.end + 8);
+    if (NEGATION.test(after)) sign = -sign;
+    else if (STOPPED.test(after)) { sign = -sign; w *= 0.5; }
+    out.push({ id: marketOf(best.item[2]) + ' ' + best.item[1], sign, w, opinion });
+  }
+  return out;
 }
-function signalLabel(v) { return v > 0.15 ? '상승·확대 신호 우세' : v < -0.15 ? '하락·위축 신호 우세' : '혼조'; }
+function articleClauses(a) {
+  const text = (a.title || '') + ' ¶ ' + (a.snippet || '');
+  return text.split(/¶|[,…·;\n]|\.{2,}|(?<=다)\.\s*|\s(?:반면|하지만|그러나|다만|한편)\s/).map(s => s.trim()).filter(s => s.length >= 4);
+}
+/* 기사별로 지표마다 방향을 하나로 모은 뒤(같은 기사 중복 집계 방지), 보도량 가중 평균 */
+function marketSignals(arts) {
+  const acc = {};
+  ASPECTS.forEach(a => acc[a.id] = { ...a, num: 0, den: 0, n: 0, ev: [] });
+  for (const a of arts) {
+    const per = {};
+    for (const c of articleClauses(a)) for (const s of clauseSignals(c)) {
+      (per[s.id] = per[s.id] || { sum: 0, ev: [] }).sum += s.sign * s.w;
+      per[s.id].ev.push({ clause: c, sign: s.sign, opinion: s.opinion });
+    }
+    const aw = Math.log(2 + (a.coverage || 1));
+    for (const id in per) {
+      if (!acc[id] || per[id].sum === 0) continue;
+      const vote = Math.max(-1, Math.min(1, per[id].sum));
+      acc[id].num += vote * aw; acc[id].den += aw; acc[id].n++;
+      acc[id].ev.push({ art: a, vote, clause: per[id].ev.find(e => Math.sign(e.sign) === Math.sign(vote)).clause, opinion: per[id].ev.every(e => e.opinion) });
+    }
+  }
+  return ASPECTS.map(a => { const r = acc[a.id]; r.v = r.den ? r.num / r.den : 0; r.ev.sort((x, y) => (y.art.coverage || 0) - (x.art.coverage || 0)); return r; });
+}
+const MIN_EVIDENCE = 3; // 근거 기사 3건 미만 지표는 숨김
+const shownSig = r => r.n >= MIN_EVIDENCE;
+function aspectLabel(r) { return r.v > 0.15 ? r.pos + ' 우세' : r.v < -0.15 ? r.neg + ' 우세' : '혼조'; }
 
 function topTerms(arts, k, exclude) {
   const df = new Map();
@@ -231,27 +334,27 @@ function summarizeDay(day) {
   const sentItems = [];
   for (const a of all) for (const s of splitSentences(a)) sentItems.push({ ...s, weight: (a.score || 1) * (s.isTitle ? 1.3 : 1) });
   const key = textRank(sentItems, 5, it => it.art.keyword);
-  const sig = groupSignal(all);
+  const sig = marketSignals(all);
   const kwSet = new Set(day.keywords.map(k => k.keyword.toUpperCase()));
   const terms = topTerms(all, 14, kwSet);
   const perKw = day.keywords.map(kw => {
     const items = [];
     for (const a of kw.articles) for (const s of splitSentences(a)) items.push({ ...s, weight: (a.score || 1) * (s.isTitle ? 1.3 : 1) });
     const cov = kw.articles.reduce((s, a) => s + (a.coverage || 1), 0);
-    return { kw, sents: textRank(items, 2), sig: groupSignal(kw.articles), terms: topTerms(kw.articles, 6, new Set([kw.keyword.toUpperCase()])), coverage: cov };
+    return { kw, sents: textRank(items, 2), sig: marketSignals(kw.articles), terms: topTerms(kw.articles, 6, new Set([kw.keyword.toUpperCase()])), coverage: cov };
   });
   const press = new Set(all.map(a => a.press).filter(Boolean));
   const hottest = all.slice().sort((a, b) => (b.coverage - a.coverage) || (b.score - a.score))[0];
   const byCov = perKw.slice().sort((a, b) => b.coverage - a.coverage);
-  const ups = perKw.filter(p => p.sig.v > 0.15).map(p => p.kw.keyword);
-  const downs = perKw.filter(p => p.sig.v < -0.15).map(p => p.kw.keyword);
   let narr = `${fmtDate(day.date)} 부동산 뉴스는 ${day.keywords.length}개 핵심 키워드(${day.keywords.map(k => k.keyword).join('·')})를 중심으로 `
     + `${all.length}건이 선별되었고, 언론사 ${press.size}곳의 보도가 포함되었습니다. `;
   if (hottest) narr += `가장 많이 보도된 이슈는 “${hottest.title}”로, 관련 보도가 약 ${hottest.coverage}건 확인됩니다. `;
   if (byCov.length) narr += `키워드별 보도량은 '${byCov[0].kw.keyword}'가 가장 많았고${byCov[1] ? `, '${byCov[1].kw.keyword}'가 뒤를 이었습니다` : ''}. `;
-  narr += `기사 표현 기준 시장 방향 신호는 ${signalLabel(sig.v)}(지수 ${sig.v.toFixed(2)})`;
-  if (ups.length || downs.length) narr += ` — ${ups.length ? `상승·확대 쪽: ${ups.join(', ')}` : ''}${ups.length && downs.length ? ' / ' : ''}${downs.length ? `하락·위축 쪽: ${downs.join(', ')}` : ''}`;
-  narr += `. 자주 언급된 표현은 ${terms.slice(0, 5).map(t => `'${t[0]}'`).join(', ')} 입니다.`;
+  const clear = sig.filter(shownSig);
+  narr += clear.length
+    ? `기사 표현으로 본 시장 흐름은 ${clear.map(r => `${r.id} ${aspectLabel(r)}`).join(', ')}입니다. `
+    : '가격·물량·거래의 방향을 판단할 만한 근거(기사 3건 이상)가 부족했습니다. ';
+  narr += `자주 언급된 표현은 ${terms.slice(0, 5).map(t => `'${t[0]}'`).join(', ')} 입니다.`;
   return { all, key, sig, terms, perKw, press, narr };
 }
 
@@ -261,9 +364,23 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&a
 const safeUrl = u => /^https?:\/\//i.test(u || '') ? esc(u) : '#';
 function fmtDate(d) { const [y, m, dd] = d.split('-'); const w = '일월화수목금토'[new Date(+y, m - 1, +dd).getDay()]; return `${+m}월 ${+dd}일(${w})`; }
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 1600); }
-function sigBar(v, label) {
-  const pct = ((v + 1) / 2 * 100).toFixed(1);
-  return `<div class="sig"><span style="color:var(--down)">하락</span><div class="sigbar"><i style="left:${pct}%"></i></div><span style="color:var(--up)">상승</span><span>${label || v.toFixed(2)}</span></div>`;
+function sigBar(r) {
+  const pct = ((r.v + 1) / 2 * 100).toFixed(1);
+  const lab = aspectLabel(r), cls = r.v > 0.15 ? 'pos' : r.v < -0.15 ? 'neg' : '';
+  return `<div class="sig"><b class="signame">${esc(r.id)}</b><span class="end neg">${r.neg}</span><div class="sigbar"><i style="left:${pct}%"></i></div><span class="end pos">${r.pos}</span>`
+    + `<span class="siglab ${cls}">${lab} <small>${r.v >= 0 ? '+' : ''}${r.v.toFixed(2)} · 근거 ${r.n}건</small></span></div>`;
+}
+function sigBars(rows, max) {
+  const shown = rows.filter(shownSig).sort((a, b) => max ? b.n - a.n : 0).slice(0, max || 6);
+  if (!shown.length) return max ? '' : '<p class="note">근거 기사 3건 이상인 시장 지표가 없습니다.</p>';
+  return `<div class="sigs">${shown.map(sigBar).join('')}</div>`;
+}
+function evidenceHtml(rows) {
+  const shown = rows.filter(shownSig);
+  if (!shown.length) return '';
+  return `<details class="others"><summary>판단 근거 보기 (기사 ${shown.reduce((s, r) => s + r.n, 0)}건)</summary>${shown.map(r => `
+    <p class="evh">${esc(r.id)} — ${aspectLabel(r)}</p><ul>${r.ev.slice(0, 8).map(e => `<li><span class="${e.vote > 0 ? 'pos' : 'neg'}">${e.vote > 0 ? '▲ ' + r.pos : '▼ ' + r.neg}</span> ${esc(e.clause)}
+      ${e.opinion ? '<span class="badge">전망·의견</span>' : ''}<a class="src" href="${safeUrl(e.art.url)}" target="_blank" rel="noopener">${esc(e.art.press)} ↗</a></li>`).join('')}</ul>`).join('')}</details>`;
 }
 function sourceName(s) { return s === 'both' ? 'Google+Naver' : s === 'naver' ? 'Naver' : 'Google'; }
 function articleHtml(a, rankNo) {
@@ -318,7 +435,9 @@ function renderBrief(v, day) {
     <h2>오늘의 종합 요약 <span class="sub">탑재형 TextRank 요약 · 인터넷 AI 미사용</span>
       <button class="btn" id="copyBrief" style="float:right;font-size:12.5px;padding:3px 8px">요약 복사</button></h2>
     <p class="narr">${esc(S.narr)}</p>
-    ${sigBar(S.sig.v, `${signalLabel(S.sig.v)} (${S.sig.v.toFixed(2)})`)}
+    <h2 style="margin-top:18px">시장 지표 <span class="sub">기사 표현 기준 · 산출 방식은 하단 설명 참고</span></h2>
+    ${sigBars(S.sig)}
+    ${evidenceHtml(S.sig)}
     <h2 style="margin-top:18px">핵심 문장</h2>
     <ol class="keysent">${S.key.map(s => `<li>${esc(s.text)}<a class="src" href="${safeUrl(s.art.url)}" target="_blank" rel="noopener">${esc(s.art.press)} ↗</a></li>`).join('')}</ol>
   </div>
@@ -326,7 +445,8 @@ function renderBrief(v, day) {
     ${S.perKw.map((p, idx) => `<div class="card kwcard">
       <h3><a href="#" data-kw="${idx}">#${esc(p.kw.keyword)}</a> <span class="src">보도량 ${p.coverage}건</span></h3>
       ${p.sents.map(s => `<p>· ${esc(s.text)}</p>`).join('')}
-      ${sigBar(p.sig.v, signalLabel(p.sig.v))}
+      ${sigBars(p.sig, 3)}
+      ${evidenceHtml(p.sig)}
       <div class="chips" style="margin-top:8px">${p.terms.map(t => `<span class="chip static">${esc(t[0])} ${t[1]}</span>`).join('')}</div>
     </div>`).join('')}
   </div>
@@ -337,13 +457,67 @@ function renderBrief(v, day) {
       <h2 style="margin-top:18px">표본 전체 이슈어 <span class="sub">${day.analysis.corpusSize}건 표본 기준</span></h2>
       <div class="chips">${(day.analysis.issueTerms || []).slice(0, 24).map(t => `<span class="chip static">${esc(t.term)} ${t.df}</span>`).join('')}</div>
     </div>
-  </div>`;
+  </div>
+  ${methodHtml(day)}`;
   v.querySelectorAll('[data-kw]').forEach(a => a.onclick = e => { e.preventDefault(); state.kw = +a.dataset.kw; setTab('news'); });
   $('#copyBrief').onclick = () => {
-    const txt = `[부동산 데일리 브리핑] ${fmtDate(day.date)}\n\n${S.narr}\n\n핵심 문장\n${S.key.map((s, i) => `${i + 1}. ${s.text} (${s.art.press})`).join('\n')}\n\n`
+    const marks = S.sig.filter(shownSig).map(r => `- ${r.id}: ${aspectLabel(r)} (${r.v >= 0 ? '+' : ''}${r.v.toFixed(2)}, 근거 ${r.n}건)`).join('\n');
+    const txt = `[부동산 데일리 브리핑] ${fmtDate(day.date)}\n\n${S.narr}\n\n시장 지표\n${marks || '- 판단 근거 부족'}\n\n핵심 문장\n${S.key.map((s, i) => `${i + 1}. ${s.text} (${s.art.press})`).join('\n')}\n\n`
       + S.perKw.map(p => `#${p.kw.keyword}\n${p.kw.articles.slice(0, 3).map(a => `- ${a.title} (${a.press}) ${a.url}`).join('\n')}`).join('\n\n');
     navigator.clipboard.writeText(txt).then(() => toast('요약을 복사했습니다'), () => toast('복사 실패: 브라우저 권한 확인'));
   };
+}
+
+function methodHtml(day) {
+  const n = day.keywords.length;
+  return `<div class="card method"><h2>용어 및 산출 근거</h2>
+  <dl>
+    <dt>핵심 키워드 (${n}개)</dt>
+    <dd>“부동산·아파트·주택 시장·부동산 정책”으로 검색한 최근 24시간 기사 ${day.analysis.corpusSize}건을 표본으로 씁니다.
+      후보 키워드 ${(day.analysis.candidates || []).length}개마다 점수를 매깁니다.<br>
+      <b>점수 = 0.45 × 출현 + 0.35 × 연관 중심성 + 0.20 × 모멘텀</b> (각 항목은 최댓값 기준으로 0~1 환산)
+      <ul><li><b>출현</b>: 키워드(동의어 포함)가 등장한 기사 수</li>
+      <li><b>연관 중심성</b>: 키워드끼리 같은 기사에 함께 등장한 횟수로 연결망을 만들고 PageRank로 계산한, 다른 이슈와 얼마나 중심적으로 엮여 있는지의 값</li>
+      <li><b>모멘텀</b>: 오늘 출현율 ÷ 최근 7일 평균 출현율 (최대 3배)</li></ul>
+      점수 순으로 고르되 이미 고른 키워드와 기사가 50% 넘게 겹치면 건너뛰어 서로 다른 주제 ${n}개를 고릅니다. 세부 점수는 ‘키워드 연관도 분석’ 탭에 있습니다.</dd>
+
+    <dt>화제도</dt>
+    <dd>포털이 기사별 조회수를 공개하지 않아 대신 쓰는 인기 점수입니다. 같은 이슈를 다룬 기사를 제목 유사도로 하나로 묶은 뒤 계산합니다.<br>
+      <b>화제도 = 2 × 보도 언론사 수 + 0.4 × 네이버 관련뉴스 수(최대 30) + 0.3 × 구글 관련기사 수(최대 10)
+      + 2(구글·네이버 동시 노출) + 8(네이버 ‘많이 본 뉴스’ 포함) + 검색 순위 가점(최대 3)</b><br>
+      키워드마다 화제도 상위 10개 이슈를 보여줍니다.</dd>
+
+    <dt>관련 보도 N건</dt>
+    <dd>같은 이슈를 보도한 기사 수의 추정치입니다. 직접 확인한 언론사 수와 네이버 ‘관련뉴스 N건’ 표시 중 큰 값을 씁니다.</dd>
+
+    <dt>네이버 많이 본 뉴스</dt>
+    <dd>네이버 뉴스 ‘언론사별 많이 본 뉴스’ 랭킹(실제 조회수 기반)에 같은 기사가 올라 있으면 표시하고, 화제도에 가장 큰 가점(+8)을 줍니다.</dd>
+
+    <dt>시장 지표</dt>
+    <dd>기사 제목과 요약문을 구절 단위로 나눈 뒤, 한 구절 안에서 <b>대상</b>과 <b>방향</b> 표현을 짝지어 판정합니다.
+      <table class="mt"><tr><th>지표</th><th>대상 표현 (예)</th><th>판정</th></tr>
+        <tr><td>매매 가격</td><td>집값, 아파트값, 매매가, 호가, 분양가, 신고가</td><td>높아지면 <span class="pos">상승</span> · 낮아지면 <span class="neg">하락</span></td></tr>
+        <tr><td>전월세 가격</td><td>전셋값, 전세가, 월세, 임대료, 역전세</td><td>높아지면 <span class="pos">상승</span> · 낮아지면 <span class="neg">하락</span></td></tr>
+        <tr><td>매매 물량</td><td>미분양, 입주물량, 매물, 공급, 인허가, 착공</td><td>많아지면 <span class="pos">증가</span> · 적어지면 <span class="neg">감소</span></td></tr>
+        <tr><td>전월세 물량</td><td>전세 매물, 월세 매물, 전세난</td><td>많아지면 <span class="pos">증가</span> · 적어지면 <span class="neg">감소</span></td></tr>
+        <tr><td>매매 거래</td><td>거래량, 매매 거래, 거래 건수, 청약 경쟁률</td><td>많아지면 <span class="pos">증가</span> · 적어지면 <span class="neg">감소</span></td></tr>
+        <tr><td>전월세 거래</td><td>전세·월세 문맥의 거래량, 거래 건수</td><td>많아지면 <span class="pos">증가</span> · 적어지면 <span class="neg">감소</span></td></tr>
+      </table>
+      <ul><li><b>방향 표현</b>: 오름 쪽(상승, 올라, 급등, 증가, 늘어, 확대, 쌓여, 적체 등)과 내림 쪽(하락, 떨어져, 급락, 감소, 줄어, 급감, 품귀, 최저 등)</li>
+      <li><b>짝짓기</b>: 방향 표현마다 같은 구절 안에서 가장 가까운(20자 이내) 대상과 짝짓습니다. 대상 단어만으로 매매·전월세가 정해지지 않으면 구절에 전세·월세·임대차가 있을 때 전월세로 봅니다.</li>
+      <li><b>보정</b>: “않·없” 같은 부정 표현이 뒤따르면 방향을 뒤집고, “멈춰·그쳐”는 반대 방향 절반으로 셉니다. “가능성·우려·전망·예상·?” 등이 들어간 의견·전망 구절은 가중치 0.4로 낮춥니다.</li>
+      <li><b>지수</b>: 기사마다 지표별 방향을 −1~+1로 하나로 모은 뒤(같은 기사 중복 방지), 관련 보도 수가 많은 기사에 더 큰 가중치(log(2 + 관련 보도 수))를 주어 평균합니다. +1에 가까울수록 상승·증가, −1에 가까울수록 하락·감소입니다.</li>
+      <li><b>판정</b>: 지수 +0.15 초과면 상승(증가) 우세, −0.15 미만이면 하락(감소) 우세, 그 사이는 혼조입니다. ‘근거 N건’은 판정에 쓰인 기사 수이며, ‘판단 근거 보기’에서 실제 구절을 확인할 수 있습니다.</li>
+      <li><b>표시 기준</b>: 근거 기사가 <b>3건 미만인 지표는 신뢰도가 낮아 표시하지 않습니다</b>(요약문, 추이 그래프 포함).</li></ul>
+      <p class="note">※ 뉴스 표현을 집계한 지표이지 실제 시세 통계가 아닙니다. 근거 건수가 많을수록 신뢰도가 높습니다.
+      ${window.IS_WEB ? '웹 공개판은 저작권 보호를 위해 기사 요약문 없이 제목만으로 판정합니다.' : ''}</p></dd>
+
+    <dt>핵심 문장 · 키워드별 요약</dt>
+    <dd>TextRank 방식의 추출 요약입니다. 문장끼리 겹치는 단어로 연결망을 만들어 PageRank로 중심 문장을 고릅니다. 이때 화제도가 높은 기사의 문장에 가중치를 주고, 비슷한 문장은 하나만 남기며, 키워드마다 최대 1문장씩 뽑습니다. 문장을 새로 만들지 않고 기사 속 문장을 그대로 가져옵니다.</dd>
+
+    <dt>오늘의 이슈어 · 표본 전체 이슈어</dt>
+    <dd>기사에서 조사를 떼어낸 단어 가운데 일반 단어(기자, 오늘, 부동산 등)를 빼고, 그 단어가 등장한 기사 수가 많은 순으로 보여줍니다. ‘오늘의 이슈어’는 선별 기사 기준, ‘표본 전체 이슈어’는 키워드 분석 표본 전체 기준입니다.</dd>
+  </dl></div>`;
 }
 
 function renderNews(v, day) {
@@ -366,7 +540,7 @@ function renderAnalysis(v, day) {
     ② 후보 키워드 ${C.length}개(설정 파일에서 편집 가능)가 각 기사에 등장하는지 확인해 <b>출현 기사 수</b>를 셉니다.<br>
     ③ 같은 기사에 함께 등장한 횟수로 <b>공출현 네트워크</b>를 만들고 가중 PageRank로 <b>연관 중심성</b>을 계산합니다.<br>
     ④ 최근 7일 평균 대비 오늘 출현 비율로 <b>모멘텀</b>을 구합니다. 점수 = 0.45×출현 + 0.35×중심성 + 0.20×모멘텀.<br>
-    ⑤ 점수 순으로 고르되, 이미 고른 키워드와 기사 집합이 50% 넘게 겹치면 제외해 <b>서로 다른 주제 5개</b>를 확보합니다.</p></div>
+    ⑤ 점수 순으로 고르되, 이미 고른 키워드와 기사 집합이 50% 넘게 겹치면 제외해 <b>서로 다른 주제 ${day.keywords.length}개</b>를 확보합니다.</p></div>
   <div class="card"><h2>공출현 네트워크 <span class="sub">상위 14개 후보 · 선 굵기 = 함께 등장한 기사 수</span></h2>${networkSvg(C.slice(0, 14), day.analysis.edges || [])}</div>
   <div class="card scroll"><h2>후보 키워드 점수표</h2><table>
     <tr><th>키워드</th><th></th><th>점수</th><th class="num">출현 기사</th><th class="num">출현율</th><th class="num">중심성</th><th class="num">모멘텀</th></tr>
@@ -399,7 +573,10 @@ async function renderTrend(v) {
     return;
   }
   const recent = days.slice(-30);
-  const sigs = recent.map(d => { const all = d.keywords.flatMap(k => k.articles); return { date: d.date, v: groupSignal(all).v }; });
+  // 지표별 일자 시계열 (근거가 있는 날만 점으로 표시)
+  const perDay = recent.map(d => ({ date: d.date, rows: marketSignals(d.keywords.flatMap(k => k.articles)) }));
+  const series = ASPECTS.map((a, ai) => ({ a, points: perDay.map(d => ({ date: d.date, v: d.rows[ai].v, n: d.rows[ai].n })) }))
+    .filter(s => s.points.some(shownSig));
   // 키워드별 출현율 히트맵: 기간 내 선정된 적 있는 키워드
   const kwSet = new Map();
   recent.forEach(d => d.analysis.candidates.forEach(c => { if (c.selected) kwSet.set(c.kw, (kwSet.get(c.kw) || 0) + 1); }));
@@ -413,7 +590,8 @@ async function renderTrend(v) {
   }).sort((a, b) => b[3] - a[3]).slice(0, 15);
 
   v.innerHTML = `
-  <div class="card"><h2>시장 방향 신호 추이 <span class="sub">최근 ${recent.length}일 · +1 상승·확대 ↔ -1 하락·위축</span></h2>${lineSvg(sigs)}</div>
+  <div class="card"><h2>시장 지표 추이 <span class="sub">최근 ${recent.length}일 · 기사 표현 기준 · 근거 없는 날은 빈칸</span></h2>
+    <div class="grid2">${series.map(s => `<div><p class="evh">${esc(s.a.id)} <span class="src">위 ${s.a.pos} · 아래 ${s.a.neg}</span></p>${lineSvg(s.points, s.a.pos, s.a.neg)}</div>`).join('') || '<p class="note">판단 근거가 있는 날이 없습니다.</p>'}</div></div>
   <div class="card scroll"><h2>선정 키워드 출현율 추이 <span class="sub">진할수록 많이 보도 · ● = 그날 선정</span></h2>
     <table class="hm"><tr><th></th>${recent.map(d => `<th style="text-align:center">${+d.date.slice(5, 7)}/${+d.date.slice(8)}</th>`).join('')}</tr>
     ${kws.map(k => `<tr><th>${esc(k)}</th>${recent.map(d => { const c = d.analysis.candidates.find(x => x.kw === k); const f = c ? c.freq : 0;
@@ -424,16 +602,19 @@ async function renderTrend(v) {
     ${rising.map(r => `<tr><td>${esc(r[0])}</td><td class="num">${(r[1] * 100).toFixed(1)}%</td><td class="num">${(r[2] * 100).toFixed(1)}%</td><td class="num">${r[3].toFixed(1)}×</td></tr>`).join('')}</table></div>`;
 }
 
-function lineSvg(points) {
-  const W = 720, H = 220, L = 34, R = 26, T = 12, B = 28;
+function lineSvg(points, posLabel, negLabel) {
+  const W = 480, H = 200, L = 40, R = 22, T = 12, B = 28;
   const x = i => L + (W - L - R) * (points.length === 1 ? 0.5 : i / (points.length - 1));
   const y = v => T + (H - T - B) * (1 - (v + 1) / 2);
-  const path = points.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.v).toFixed(1)}`).join('');
-  const step = Math.ceil(points.length / 8);
+  const has = p => p.n == null || shownSig(p);
+  let path = '', pen = false;
+  points.forEach((p, i) => { if (!has(p)) { pen = false; return; } path += `${pen ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.v).toFixed(1)}`; pen = true; });
+  const step = Math.ceil(points.length / 6);
+  const gl = { 1: posLabel || '+1', 0: '0', [-1]: negLabel || '-1' };
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">
-    ${[-1, -0.5, 0, 0.5, 1].map(g => `<line x1="${L}" x2="${W - R}" y1="${y(g)}" y2="${y(g)}" stroke="var(--line)"/><text x="${L - 6}" y="${y(g) + 4}" text-anchor="end">${g}</text>`).join('')}
+    ${[-1, 0, 1].map(g => `<line x1="${L}" x2="${W - R}" y1="${y(g)}" y2="${y(g)}" stroke="var(--line)"/><text x="${L - 6}" y="${y(g) + 4}" text-anchor="end">${gl[g]}</text>`).join('')}
     <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2"/>
-    ${points.map((p, i) => `<circle cx="${x(i)}" cy="${y(p.v)}" r="3.5" fill="${p.v >= 0 ? 'var(--up)' : 'var(--down)'}"><title>${p.date}: ${p.v.toFixed(2)}</title></circle>`).join('')}
+    ${points.map((p, i) => has(p) ? `<circle cx="${x(i)}" cy="${y(p.v)}" r="3.5" fill="${p.v >= 0 ? 'var(--up)' : 'var(--down)'}"><title>${p.date}: ${p.v.toFixed(2)}${p.n != null ? ' · 근거 ' + p.n + '건' : ''}</title></circle>` : '').join('')}
     ${points.map((p, i) => i % step === 0 || i === points.length - 1 ? `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${+p.date.slice(5, 7)}/${+p.date.slice(8)}</text>` : '').join('')}
   </svg>`;
 }
@@ -467,6 +648,102 @@ $('#dateSel').onchange = e => setDate(e.target.value);
 $('#prev').onclick = () => { const i = INDEX.findIndex(x => x.date === state.date); if (i < INDEX.length - 1) setDate(INDEX[i + 1].date); };
 $('#next').onclick = () => { const i = INDEX.findIndex(x => x.date === state.date); if (i > 0) setDate(INDEX[i - 1].date); };
 $('#latest').onclick = () => INDEX.length && setDate(INDEX[0].date);
+
+/* ================================================================ 지금 수집 (웹 전용, 관리자)
+   비밀번호는 어디에도 저장하지 않는다. trigger-key.js 에는 비밀번호로 암호화(PBKDF2 + AES-GCM)된
+   GitHub 토큰만 있고, 올바른 비밀번호를 넣어야 복호화되어 수집 워크플로를 실행할 수 있다. */
+const REPO = (() => {
+  if (!window.IS_WEB || !location.hostname.endsWith('.github.io')) return null;
+  const repo = location.pathname.split('/').filter(Boolean)[0];
+  return repo ? { owner: location.hostname.split('.')[0], repo } : null;
+})();
+const WORKFLOW = 'daily.yml';
+const b64d = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function decryptToken(pw) {
+  const k = window.TRIGGER_KEY;
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: b64d(k.salt), iterations: k.iter, hash: 'SHA-256' },
+    base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+  return new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64d(k.iv) }, key, b64d(k.ct)));
+}
+function gh(token, path, opts) {
+  return fetch(`https://api.github.com/repos/${REPO.owner}/${REPO.repo}${path}`, {
+    ...opts, headers: { Accept: 'application/vnd.github+json', Authorization: 'Bearer ' + token, 'X-GitHub-Api-Version': '2022-11-28' } });
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+let collecting = false;
+function setStatus(msg) { const s = $('#trigStatus'); if (s) s.textContent = msg; }
+function setBtn(label, busy) { const b = $('#collectNow'); b.textContent = label; b.disabled = !!busy; }
+
+async function runCollect(pw) {
+  const actionsUrl = `https://github.com/${REPO.owner}/${REPO.repo}/actions/workflows/${WORKFLOW}`;
+  if (!window.TRIGGER_KEY) {
+    setStatus('버튼 설정 파일(trigger-key.js)이 아직 업로드되지 않았습니다.\nGitHub Actions 페이지에서 직접 실행해 주세요.');
+    window.open(actionsUrl, '_blank', 'noopener');
+    return;
+  }
+  setStatus('비밀번호 확인 중…');
+  let token;
+  try { token = await decryptToken(pw); }
+  catch (e) { await sleep(1200); setStatus('비밀번호가 올바르지 않습니다.'); return; }
+
+  const started = Date.now();
+  const res = await gh(token, `/actions/workflows/${WORKFLOW}/dispatches`, { method: 'POST', body: JSON.stringify({ ref: 'main' }) });
+  if (res.status !== 204) {
+    setStatus(res.status === 401 ? 'GitHub 토큰이 만료되었거나 잘못되었습니다.\n토큰을 다시 발급해 설정 파일을 새로 만들어 주세요.'
+      : `수집을 시작하지 못했습니다 (오류 ${res.status}).\n토큰에 Actions 읽기·쓰기 권한이 있는지 확인해 주세요.`);
+    return;
+  }
+  collecting = true; setBtn('⟳ 수집 중…', true);
+  setStatus('수집을 시작했습니다. 보통 1~2분 걸립니다.\n이 창을 닫아도 계속 진행됩니다.');
+  const prevStamp = INDEX[0] ? INDEX[0].collectedAt : '';
+  try {
+    // 1) 수집 워크플로 완료 대기 (최대 10분)
+    let run = null;
+    for (let i = 0; i < 60; i++) {
+      await sleep(10000);
+      const r = await gh(token, `/actions/workflows/${WORKFLOW}/runs?event=workflow_dispatch&per_page=5`);
+      if (!r.ok) continue;
+      run = ((await r.json()).workflow_runs || []).find(x => new Date(x.created_at).getTime() >= started - 60000);
+      if (!run) continue;
+      if (run.status !== 'completed') { setStatus(`수집 진행 중… (${Math.round((Date.now() - started) / 1000)}초 경과)`); continue; }
+      break;
+    }
+    if (!run || run.status !== 'completed') throw new Error('수집이 10분 안에 끝나지 않았습니다. GitHub Actions 기록을 확인해 주세요.');
+    if (run.conclusion !== 'success') throw new Error('수집이 실패했습니다. GitHub Actions 기록을 확인해 주세요.');
+    // 2) 웹사이트 반영 대기 (최대 5분): index.js 의 수집 시각이 바뀌면 새로고침
+    setBtn('⟳ 반영 중…', true);
+    setStatus('수집 완료! 웹사이트에 반영하는 중입니다 (1~2분).');
+    for (let i = 0; i < 30; i++) {
+      await sleep(10000);
+      try {
+        const txt = await (await fetch('data/index.js?v=' + Date.now(), { cache: 'no-store' })).text();
+        const m = txt.match(/"collectedAt":"([^"]+)"/);
+        if (m && m[1] !== prevStamp) { setStatus('반영 완료! 새로고침합니다.'); toast('최신 뉴스로 갱신되었습니다'); await sleep(1200); location.reload(); return; }
+      } catch (e) {}
+    }
+    throw new Error('수집은 끝났지만 웹사이트 반영이 늦어지고 있습니다. 잠시 후 새로고침해 주세요.');
+  } catch (e) {
+    setStatus(e.message); toast(e.message);
+  } finally {
+    collecting = false; setBtn('⟳ 지금 수집', false);
+  }
+}
+
+if (REPO) {
+  const btn = $('#collectNow');
+  btn.hidden = false;
+  document.body.insertAdjacentHTML('beforeend', `<dialog class="trig" id="trigDlg"><form method="dialog" id="trigForm">
+    <h3>지금 뉴스 수집</h3><p class="note" style="margin:0">관리자 비밀번호를 입력하세요.</p>
+    <input type="password" id="trigPw" autocomplete="off" placeholder="비밀번호">
+    <div class="row"><button class="btn" value="cancel" type="submit" formnovalidate>닫기</button><button class="btn admin" id="trigGo" type="button">수집 실행</button></div>
+    <p class="st" id="trigStatus"></p></form></dialog>`);
+  const dlg = $('#trigDlg');
+  btn.onclick = () => { if (!collecting) setStatus(''); $('#trigPw').value = ''; dlg.showModal(); $('#trigPw').focus(); };
+  const go = () => { if (collecting) return; const pw = $('#trigPw').value; $('#trigPw').value = ''; if (pw) runCollect(pw); };
+  $('#trigGo').onclick = go;
+  $('#trigPw').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); go(); } };
+}
 document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => setTab(b.dataset.tab));
 render();
 </script>
