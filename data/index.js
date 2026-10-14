@@ -1,1 +1,1 @@
-window.NEWS_INDEX = [{"date":"2026-10-14","collectedAt":"2026-10-14 11:33:26","keywords":["집값","분양","주택공급","전세","미분양"],"count":50}];
+window.NEWS_INDEX = [{"date":"2026-10-14","collectedAt":"2026-10-14 13:54:40","keywords":["분양","집값","주택공급","공공주택","상업용부동산","부동산대책"],"count":60}];
