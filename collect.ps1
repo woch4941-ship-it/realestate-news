@@ -603,6 +603,8 @@ foreach ($c in $analysis.selected) {
     $keywordsOut += [ordered]@{
         keyword = $c.kw; query = $c.query; score = $row.score; df = $row.df; momentum = $row.momentum
         rawCount = $arts.Count; articles = $top
+        # 표본 기사 중 이 키워드(동의어 포함)가 나온 기사 전체의 번호 (analysis.sampleArts 기준) - 함께 많이 쓰인 표현 분석용
+        sampleDocs = @($c.docs | Sort-Object)
     }
 }
 
