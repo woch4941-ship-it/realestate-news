@@ -1,0 +1,41 @@
+name: daily-news
+
+on:
+  schedule:
+    - cron: '30 22 * * *'   # 한국시간 매일 07:30
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-news
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Collect news
+        shell: powershell
+        env:
+          PUBLIC_SITE: '1'
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
+        run: ./collect.ps1
+
+      - name: Commit data
+        shell: powershell
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            git commit -m "news: $([DateTime]::UtcNow.AddHours(9).ToString('yyyy-MM-dd HH:mm')) KST"
+            git push
+          }
+          exit 0
