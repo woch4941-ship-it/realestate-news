@@ -116,7 +116,7 @@ function Get-NaverId([string]$url) {
 # 한국어 간이 토크나이저 (조사 제거) - 이슈어 탐색용
 $Josa = @('에서는','으로는','에서도','에게서','이라는','이라고','까지','부터','에서','에게','으로','보다','처럼','라는','하는','했다','한다','된다','됐다','되는','이다','은','는','이','가','을','를','의','에','와','과','도','만','로')
 $Stop = @{}
-'기자 뉴스 오늘 지난 올해 이번 관련 위해 대한 통해 따르면 밝혔다 있다 없다 것으로 지난해 이후 가운데 대해 최근 사진 연합뉴스 뉴시스 종합 단독 속보 포토 영상 이날 한편 또한 있는 같은 위한 대비 기준 경우 정도 오전 오후 현재 부동산 아파트 주택 시장 정부 서울 전국 지역 이상 이하 가장 다시 모두 계획 예정 발표 진행 전망 우리 그는 하지만 이어 것은 것이 때문 등을 등의 바로 지금 만에 전체보기 네이버뉴스 무슨 어떻게 왜 아냐 대상 문제 개월 노력해야 가능성 것으 따라 반면 실제 넘어 데다 함께 특히 다만 해당' -split ' ' | ForEach-Object { $Stop[$_] = 1 }
+'기자 뉴스 오늘 지난 올해 이번 관련 위해 대한 통해 따르면 밝혔다 있다 없다 것으로 지난해 이후 가운데 대해 최근 사진 연합뉴스 뉴시스 종합 단독 속보 포토 영상 이날 한편 또한 있는 같은 위한 대비 기준 경우 정도 오전 오후 현재 부동산 아파트 주택 시장 정부 서울 전국 지역 이상 이하 가장 다시 모두 계획 예정 발표 진행 전망 우리 그는 하지만 이어 것은 것이 때문 등을 등의 바로 지금 만에 전체보기 네이버뉴스 무슨 어떻게 왜 아냐 대상 문제 개월 노력해야 가능성 것으 따라 반면 실제 넘어 데다 함께 특히 다만 해당 만원 억원 조원' -split ' ' | ForEach-Object { $Stop[$_] = 1 }
 
 function Get-Tokens([string]$text) {
     $out = New-Object System.Collections.Generic.List[string]
@@ -237,13 +237,15 @@ function Search-Naver([string]$query, [int]$pages = 0, [string]$ds = '', [string
 function Get-NaverPopular {
     $set = New-Object 'System.Collections.Generic.HashSet[string]'
     $titles = New-Object System.Collections.ArrayList
+    $urls = New-Object System.Collections.ArrayList
     $html = Get-Web 'https://news.naver.com/main/ranking/popularDay.naver' 'euc-kr'
-    if (-not $html) { return @{ ids = $set; titles = $titles } }
+    if (-not $html) { return @{ ids = $set; titles = $titles; urls = $urls } }
     foreach ($m in [regex]::Matches($html, 'href="https://n\.news\.naver\.com/article/(\d{3})/(\d+)[^"]*"[^>]*class="list_title[^"]*"[^>]*>([^<]+)<')) {
         [void]$set.Add("$($m.Groups[1].Value)/$($m.Groups[2].Value)")
         [void]$titles.Add((Clean-Text $m.Groups[3].Value))
+        [void]$urls.Add("https://n.news.naver.com/article/$($m.Groups[1].Value)/$($m.Groups[2].Value)")
     }
-    return @{ ids = $set; titles = $titles }
+    return @{ ids = $set; titles = $titles; urls = $urls }
 }
 
 # ---------------------------------------------------------------- 이슈 묶기 + 화제도 점수
@@ -390,7 +392,7 @@ function Select-Keywords($docs, $history) {
         table    = @($cands | Sort-Object score -Descending | ForEach-Object {
             [ordered]@{ kw = $_.kw; df = $_.df; freq = $freqMap[$_.kw]; centrality = [Math]::Round($_.pr, 4)
                         momentum = [Math]::Round($_.momentum, 2); score = [Math]::Round($_.score, 3)
-                        selected = $false } })
+                        selected = $false; docs = @($_.docs | Select-Object -First 8) } })
         edges    = $edges
     }
 }
@@ -529,16 +531,26 @@ Log "  랭킹 기사 $($popular.ids.Count)건"
 
 Log '기초 말뭉치 수집 (연관도 분석용)'
 $corpus = New-Object System.Collections.ArrayList
+$corpusMeta = New-Object System.Collections.ArrayList   # 표본 기사 제목·링크 (이슈어/키워드 관련 기사 팝업용)
 $seenCorpus = New-Object 'System.Collections.Generic.HashSet[string]'
 foreach ($q in $Config.corpusQueries) {
     $arts = @(Search-Google $q) + @(Search-Naver $q)
     foreach ($a in $arts) {
-        if ($seenCorpus.Add((Norm-Key $a.title))) { [void]$corpus.Add(($a.title + ' ' + $a.snippet)) }
+        if ($seenCorpus.Add((Norm-Key $a.title))) {
+            [void]$corpus.Add(($a.title + ' ' + $a.snippet))
+            [void]$corpusMeta.Add([ordered]@{ t = $a.title; u = $a.url; p = $a.press })
+        }
     }
     Log "  '$q' -> 누적 $($corpus.Count)건"
 }
 $reKey = '부동산|아파트|주택|집값|전세|분양|청약|재건축|건설|대출|금리|토지'
-foreach ($t in $popular.titles) { if ($t -match $reKey -and $seenCorpus.Add((Norm-Key $t))) { [void]$corpus.Add($t) } }
+for ($i = 0; $i -lt $popular.titles.Count; $i++) {
+    $t = $popular.titles[$i]
+    if ($t -match $reKey -and $seenCorpus.Add((Norm-Key $t))) {
+        [void]$corpus.Add($t)
+        [void]$corpusMeta.Add([ordered]@{ t = $t; u = $popular.urls[$i]; p = '네이버 많이 본 뉴스' })
+    }
+}
 
 $analysis = Select-Keywords $corpus $history
 $selNames = @($analysis.selected | ForEach-Object { $_.kw })
@@ -547,12 +559,28 @@ Log ("선정 키워드: " + ($selNames -join ', '))
 
 # 이슈어 탐색 (후보 사전에 없는 새 단어)
 $termDf = @{}
-foreach ($d in $corpus) {
+$termDocs = @{}
+for ($i = 0; $i -lt $corpus.Count; $i++) {
     $seen = @{}
-    foreach ($t in (Get-Tokens $d)) { if (-not $seen.ContainsKey($t)) { $seen[$t] = 1; $termDf[$t] = 1 + [int]$termDf[$t] } }
+    foreach ($t in (Get-Tokens $corpus[$i])) {
+        if (-not $seen.ContainsKey($t)) {
+            $seen[$t] = 1; $termDf[$t] = 1 + [int]$termDf[$t]
+            if (-not $termDocs.ContainsKey($t)) { $termDocs[$t] = New-Object System.Collections.ArrayList }
+            if ($termDocs[$t].Count -lt 8) { [void]$termDocs[$t].Add($i) }
+        }
+    }
 }
 $issueTerms = @($termDf.GetEnumerator() | Where-Object { $_.Value -ge 3 } | Sort-Object Value -Descending | Select-Object -First 30 |
-    ForEach-Object { [ordered]@{ term = $_.Key; df = $_.Value } })
+    ForEach-Object { [ordered]@{ term = $_.Key; df = $_.Value; docs = @($termDocs[$_.Key]) } })
+
+# 팝업에 쓰는 표본 기사만 골라 저장하고, 번호를 새 목록 기준으로 바꿈
+$sampleArts = New-Object System.Collections.ArrayList
+$remap = @{}
+foreach ($row in @($analysis.table) + @($issueTerms)) {
+    $row.docs = @($row.docs | ForEach-Object {
+        if (-not $remap.ContainsKey($_)) { $remap[$_] = $sampleArts.Count; [void]$sampleArts.Add($corpusMeta[$_]) }
+        $remap[$_] })
+}
 
 # 키워드별 기사 수집
 $usedTitles = New-Object 'System.Collections.Generic.HashSet[string]'
@@ -588,6 +616,7 @@ $day = [ordered]@{
         candidates = $analysis.table
         edges      = $analysis.edges
         issueTerms = $issueTerms
+        sampleArts = $sampleArts.ToArray()
     }
 }
 
