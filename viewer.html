@@ -124,6 +124,11 @@ svg text{fill:var(--ink);font-size:11px}
 .tipword{cursor:pointer}
 .chip.tipword:hover{background:var(--band);color:var(--band-ink)}
 td .tipword{border-bottom:1px dashed var(--muted)}
+.treemap{position:relative;width:100%;aspect-ratio:100/62;border-radius:8px;overflow:hidden;container-type:inline-size}
+.tm{position:absolute;box-sizing:border-box;border:2px solid var(--panel);border-radius:6px;padding:2px 3px;color:#111418;overflow:hidden;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;line-height:1.15;transition:filter .15s}
+.tm span{font-weight:700;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:clip}
+.tm small{opacity:.7}
+.tm:hover{filter:brightness(.92)}
 .chip.uniq{font-weight:700;color:var(--ink);border-color:var(--accent)}
 .ptable td,.ptable th{vertical-align:top}
 .ptable .chips{gap:4px}
@@ -198,11 +203,13 @@ function loadDay(date) {
     document.head.appendChild(s);
   });
 }
-async function loadAll(onProgress) {
+/* 최근 limit 일치만 불러옴 (없으면 전체). INDEX 는 최신순 */
+async function loadAll(onProgress, limit) {
+  const list = limit ? INDEX.slice(0, limit) : INDEX;
   const out = [];
-  for (let i = 0; i < INDEX.length; i++) {
-    try { out.push(await loadDay(INDEX[i].date)); } catch (e) { /* 손상 파일 건너뜀 */ }
-    if (onProgress) onProgress(i + 1, INDEX.length);
+  for (let i = 0; i < list.length; i++) {
+    try { out.push(await loadDay(list[i].date)); } catch (e) { /* 손상 파일 건너뜀 */ }
+    if (onProgress) onProgress(i + 1, list.length);
   }
   return out.sort((a, b) => a.date.localeCompare(b.date));
 }
@@ -369,19 +376,84 @@ const MIN_EVIDENCE = 3; // 근거 기사 3건 미만 지표는 숨김
 const shownSig = r => r.n >= MIN_EVIDENCE;
 function aspectLabel(r) { return r.v > 0.15 ? r.pos + ' 우세' : r.v < -0.15 ? r.neg + ' 우세' : '혼조'; }
 
+/* 형용사·동사 활용형 걸러내기 (형태소 분석기 없이 끝 글자로 판단, 명사 예외 목록 포함) */
+const PRED_END = ['야', '봐', '져', '워', '려', '줘', '했', '됐', '된', '될', '운', '은', '는', '던', '게', '며', '다', '와', '네', '죠', '까', '한', '할', '럽', '롭', '겠', '잖'];
+const NOUN_OK = new Set(['분야', '시야', '제한', '권한', '상한', '하한', '기한', '시한', '은행', '금은', '행운', '기운', '최소한', '한도', '부담', '바다', '기와', '게임', '나다', '은퇴']);
+function isPredicate(w) {
+  if (NOUN_OK.has(w) || /^[A-Z]+$/.test(w)) return false;
+  return PRED_END.some(e => w.endsWith(e)) || /(스러|하게|해야|해서|하며|하고|에서|으로)$/.test(w);
+}
+
+/* 트리맵: 값(빈도)에 비례하는 면적의 상자로 영역을 채움 (squarified 알고리즘) */
+function treemapLayout(items, W, H) {
+  const total = items.reduce((s, i) => s + i.v, 0) || 1, k = W * H / total;
+  const nodes = items.map(i => ({ ...i, a: i.v * k })), out = [];
+  let x = 0, y = 0, w = W, h = H, row = [];
+  const worst = (r, len) => { const s = r.reduce((a, n) => a + n.a, 0), mx = Math.max(...r.map(n => n.a)), mn = Math.min(...r.map(n => n.a)); return Math.max(len * len * mx / (s * s), s * s / (len * len * mn)); };
+  const place = r => {
+    const s = r.reduce((a, n) => a + n.a, 0);
+    if (w >= h) { const rw = s / h; let yy = y; r.forEach(n => { const rh = n.a / rw; out.push({ ...n, x, y: yy, w: rw, h: rh }); yy += rh; }); x += rw; w -= rw; }
+    else { const rh = s / w; let xx = x; r.forEach(n => { const rw = n.a / rh; out.push({ ...n, x: xx, y, w: rw, h: rh }); xx += rw; }); y += rh; h -= rh; }
+  };
+  for (let i = 0; i < nodes.length;) {
+    const len = Math.min(w, h);
+    if (!row.length || worst([...row, nodes[i]], len) <= worst(row, len)) row.push(nodes[i++]); else { place(row); row = []; }
+  }
+  if (row.length) place(row);
+  return out;
+}
+/* 상자 안에 글자가 다 안 들어가면 들어갈 때까지 글자 크기를 줄임 (최소 6px) */
+function fitTreemaps(root) {
+  (root || document).querySelectorAll(".tm span").forEach(s => {
+    s.style.fontSize = "";
+    let px = parseFloat(getComputedStyle(s).fontSize);
+    const box = s.parentElement, room = box.clientWidth - 6;
+    while ((s.scrollWidth > room || box.scrollHeight > box.clientHeight + 1) && px > 6) { px -= 0.5; s.style.fontSize = px + "px"; }
+  });
+}
+let fitTimer = null;
+window.addEventListener("resize", () => { clearTimeout(fitTimer); fitTimer = setTimeout(() => fitTreemaps(), 150); });
+
+function treemapHtml(items) {
+  items = items.filter(i => i.v > 0).sort((a, b) => b.v - a.v);
+  if (!items.length) return '<p class="note">이슈어가 없습니다.</p>';
+  const W = 100, H = 62, maxV = items[0].v, minV = items[items.length - 1].v;
+  return `<div class="treemap">${treemapLayout(items, W, H).map(r => {
+    const t = maxV === minV ? 1 : (r.v - minV) / (maxV - minV);
+    // 글자 크기를 상자 크기에 맞춤 (cqw = 트리맵 너비의 1%). 한글 한 글자 ≈ 1em
+    const bw = r.w / W * 100, bh = r.h / W * 100, len = [...r.word].length;
+    const fs = Math.min(bw / (len * 1.05 + 0.8), bh * 0.42, 6.5);
+    const showNum = bh > fs * 2.1;
+    return `<div class="tm tipword" ${r.tip || ''} style="left:${r.x / W * 100}%;top:${r.y / H * 100}%;width:${bw}%;height:${r.h / H * 100}%;background:hsl(222,${30 + 15 * t}%,${90 - 20 * t}%)">
+      <span style="font-size:max(7px,${fs.toFixed(2)}cqw)">${esc(r.word)}</span>${showNum ? `<small style="font-size:max(7px,${Math.min(fs * 0.6, 2.6).toFixed(2)}cqw)">${r.v}</small>` : ''}</div>`;
+  }).join('')}</div>`;
+}
+
 function topTerms(arts, k, exclude) {
   const df = new Map();
   for (const a of arts) new Set(tokens(a.title + ' ' + (a.snippet || ''))).forEach(t => df.set(t, (df.get(t) || 0) + 1));
   return [...df.entries()].filter(([t, c]) => c >= 2 && !(exclude || new Set()).has(t)).sort((a, b) => b[1] - a[1]).slice(0, k);
 }
 
+/* 시장 지표 판정 재료: 선별 기사 + 그날 표본 기사 제목(키워드 선정용으로 모은 약 350건). 같은 제목은 한 번만 */
+const normTitle = s => String(s || '').replace(/[^가-힣A-Za-z0-9]/g, '');
+function signalPool(days) {
+  const seen = new Set(), out = [];
+  for (const d of days) {
+    for (const a of d.keywords.flatMap(k => k.articles)) { const k = normTitle(a.title); if (!seen.has(k)) { seen.add(k); out.push(a); } }
+    for (const x of (d.analysis && d.analysis.sampleArts) || []) {
+      const k = normTitle(x.t); if (!seen.has(k)) { seen.add(k); out.push({ title: x.t, url: x.u || '', press: x.p || '', coverage: 1 }); }
+    }
+  }
+  return out;
+}
 function summarizeDay(day) {
   const all = [];
   for (const kw of day.keywords) for (const a of kw.articles) all.push({ ...a, keyword: kw.keyword });
   const sentItems = [];
   for (const a of all) for (const s of splitSentences(a)) sentItems.push({ ...s, weight: (a.score || 1) * (s.isTitle ? 1.3 : 1) });
   const key = textRank(sentItems, 5, it => it.art.keyword);
-  const sig = marketSignals(all);
+  const sig = marketSignals(signalPool([day]));
   const kwSet = new Set(day.keywords.map(k => k.keyword.toUpperCase()));
   const terms = topTerms(all, 14, kwSet);
   const perKw = day.keywords.map(kw => {
@@ -427,7 +499,7 @@ function evidenceHtml(rows) {
   if (!shown.length) return '';
   return `<details class="others"><summary>판단 근거 보기 (기사 ${shown.reduce((s, r) => s + r.n, 0)}건)</summary>${shown.map(r => `
     <p class="evh">${esc(r.id)} — ${aspectLabel(r)}</p><ul>${r.ev.slice(0, 8).map(e => `<li><span class="${e.vote > 0 ? 'pos' : 'neg'}">${e.vote > 0 ? '▲ ' + r.pos : '▼ ' + r.neg}</span> ${esc(e.clause)}
-      ${e.opinion ? '<span class="badge">전망·의견</span>' : ''}<a class="src" href="${safeUrl(e.art.url)}" target="_blank" rel="noopener">${esc(e.art.press)} ↗</a></li>`).join('')}</ul>`).join('')}</details>`;
+      ${e.opinion ? '<span class="badge">전망·의견</span>' : ''}${e.art.url ? `<a class="src" href="${safeUrl(e.art.url)}" target="_blank" rel="noopener">${esc(e.art.press)} ↗</a>` : `<span class="src">${esc(e.art.press)} (표본)</span>`}</li>`).join('')}</ul>`).join('')}</details>`;
 }
 function sourceName(s) { return s === 'both' ? 'Google+Naver' : s === 'naver' ? 'Naver' : 'Google'; }
 function articleHtml(a, rankNo) {
@@ -549,13 +621,14 @@ function renderBrief(v, day) {
   <div class="card"><h2>가장 많이 보도된 이슈 TOP 5</h2>${hot.map((a, k) => articleHtml(a, k + 1)).join('')}</div>
   <div class="card"><h2>오늘의 이슈어 <span class="sub">단어에 마우스를 올리면(휴대폰은 탭) 관련 기사 목록이 나타납니다</span></h2>
     <div class="kwgrid">
-      <div class="card"><h3>선별 기사(${S.all.length}건) 이슈어 <span class="src">기사 출현 빈도</span></h3>
-        <div class="chips">${S.terms.map(t => `<span class="chip tipword" style="font-size:${12 + Math.min(8, t[1])}px" ${tipAttr(t[0], matchArts(S.all, t[0]))}>${esc(t[0])}</span>`).join('')}</div></div>
-      <div class="card"><h3>표본 전체(${day.analysis.corpusSize}건) 이슈어 <span class="src">숫자 = 등장 기사 수</span></h3>
-        <div class="chips">${(day.analysis.issueTerms || []).slice(0, 24).map(t => `<span class="chip tipword" ${tipAttr(t.term, sampleArts(day, t.docs, () => matchArts(S.all, t.term)), t.df)}>${esc(t.term)} ${t.df}</span>`).join('')}</div></div>
+      <div class="card"><h3>선별 기사(${S.all.length}건) 이슈어 <span class="src">상자 면적 = 등장 기사 수</span></h3>
+        ${treemapHtml(S.terms.map(t => ({ word: t[0], v: t[1], tip: tipAttr(t[0], matchArts(S.all, t[0])) })))}</div>
+      <div class="card"><h3>표본 전체(${day.analysis.corpusSize}건) 이슈어 <span class="src">상자 면적 = 등장 기사 수</span></h3>
+        ${treemapHtml((day.analysis.issueTerms || []).slice(0, 24).map(t => ({ word: t.term, v: t.df, tip: tipAttr(t.term, sampleArts(day, t.docs, () => matchArts(S.all, t.term)), t.df) })))}</div>
     </div>
   </div>
   ${methodHtml(day)}`;
+  fitTreemaps(v);
   v.querySelectorAll('[data-kw]').forEach(a => a.onclick = e => { e.preventDefault(); state.kw = +a.dataset.kw; setTab('news'); });
   $('#copyBrief').onclick = () => {
     const marks = S.sig.filter(shownSig).map(r => `- ${r.id}: ${aspectLabel(r)} (${r.v >= 0 ? '+' : ''}${r.v.toFixed(2)}, 근거 ${r.n}건)`).join('\n');
@@ -592,7 +665,7 @@ function methodHtml(day) {
     <dd>네이버 뉴스 ‘언론사별 많이 본 뉴스’ 랭킹(실제 조회수 기반)에 같은 기사가 올라 있으면 표시하고, 화제도에 가장 큰 가점(+8)을 줍니다.</dd>
 
     <dt>시장 지표</dt>
-    <dd>기사 제목과 요약문을 구절 단위로 나눈 뒤, 한 구절 안에서 <b>대상</b>과 <b>방향</b> 표현을 짝지어 판정합니다.
+    <dd>그날의 선별 기사와 키워드 분석 표본 기사(약 350건)의 제목(PC 버전은 요약문 포함)을 구절 단위로 나눈 뒤, 한 구절 안에서 <b>대상</b>과 <b>방향</b> 표현을 짝지어 판정합니다.
       <table class="mt"><tr><th>지표</th><th>대상 표현 (예)</th><th>판정</th></tr>
         <tr><td>매매 가격</td><td>집값, 아파트값, 매매가, 호가, 분양가, 신고가</td><td>높아지면 <span class="pos">상승</span> · 낮아지면 <span class="neg">하락</span></td></tr>
         <tr><td>전월세 가격</td><td>전셋값, 전세가, 월세, 임대료, 역전세</td><td>높아지면 <span class="pos">상승</span> · 낮아지면 <span class="neg">하락</span></td></tr>
@@ -670,14 +743,14 @@ function networkSvg(nodes, edges, tipOf) {
 
 async function renderTrend(v) {
   v.innerHTML = '<div class="empty" id="prog">전체 기록 불러오는 중…</div>';
-  const days = await loadAll((a, b) => { const p = $('#prog'); if (p) p.textContent = `전체 기록 불러오는 중… ${a}/${b}`; });
+  const days = await loadAll((a, b) => { const p = $('#prog'); if (p) p.textContent = `최근 기록 불러오는 중… ${a}/${b}`; }, 30);  // 추이는 최근 30일만 표시
   if (days.length < 2) {
     v.innerHTML = `<div class="card empty">추이 분석은 2일 이상 데이터가 쌓이면 표시됩니다. (현재 ${days.length}일)</div>`;
     return;
   }
   const recent = days.slice(-30);
   // 지표별 일자 시계열 (근거가 있는 날만 점으로 표시)
-  const perDay = recent.map(d => ({ date: d.date, rows: marketSignals(d.keywords.flatMap(k => k.articles)) }));
+  const perDay = recent.map(d => ({ date: d.date, rows: marketSignals(signalPool([d])) }));
   const series = ASPECTS.map((a, ai) => ({ a, points: perDay.map(d => ({ date: d.date, v: d.rows[ai].v, n: d.rows[ai].n })) }))
     .filter(s => s.points.some(shownSig));
   // 키워드별 출현율 히트맵: 기간 내 선정된 적 있는 키워드
@@ -686,21 +759,21 @@ async function renderTrend(v) {
   const kws = [...kwSet.entries()].sort((a, b) => b[1] - a[1]).map(x => x[0]);
   const maxF = Math.max(0.001, ...recent.flatMap(d => d.analysis.candidates.filter(c => kwSet.has(c.kw)).map(c => c.freq)));
   // 급상승 이슈어: 최근 3일 vs 이전 기간
-  const termFreq = ds => { const m = new Map(); let n = 0; ds.forEach(d => d.keywords.forEach(k => k.articles.forEach(a => { n++; new Set(tokens(a.title + ' ' + (a.snippet || ''))).forEach(t => m.set(t, (m.get(t) || 0) + 1)); }))); return { m, n: Math.max(1, n) }; };
+  const termFreq = ds => { const m = new Map(); let n = 0; signalPool(ds).forEach(a => { n++; new Set(tokens(a.title + ' ' + (a.snippet || ''))).forEach(t => m.set(t, (m.get(t) || 0) + 1)); });  /* 선별 + 표본 전체 */ return { m, n: Math.max(1, n) }; };
   const nowF = termFreq(recent.slice(-3)), prevF = termFreq(recent.slice(0, -3));
-  const rising = [...nowF.m.entries()].filter(([, c]) => c >= 3).map(([t, c]) => {
+  const rising = [...nowF.m.entries()].filter(([t, c]) => c >= 3 && !isPredicate(t)).map(([t, c]) => {
     const now = c / nowF.n, prev = (prevF.m.get(t) || 0) / prevF.n; return [t, now, prev, (now + 0.005) / (prev + 0.005)];
   }).sort((a, b) => b[3] - a[3]).slice(0, 15);
 
   v.innerHTML = `
-  <div class="card"><h2>시장 지표 추이 <span class="sub">최근 ${recent.length}일 · 기사 표현 기준 · 근거 없는 날은 빈칸</span></h2>
+  <div class="card"><h2>시장 지표 추이 <span class="sub">최근 ${recent.length}일 · 선별 + 표본 기사 전체의 표현 기준 · 근거 3건 미만인 날은 빈칸</span></h2>
     <div class="grid2">${series.map(s => `<div><p class="evh">${esc(s.a.id)} <span class="src">위 ${s.a.pos} · 아래 ${s.a.neg}</span></p>${lineSvg(s.points, s.a.pos, s.a.neg)}</div>`).join('') || '<p class="note">판단 근거가 있는 날이 없습니다.</p>'}</div></div>
   <div class="card scroll"><h2>선정 키워드 출현율 추이 <span class="sub">진할수록 많이 보도 · ● = 그날 선정</span></h2>
     <table class="hm"><tr><th></th>${recent.map(d => `<th style="text-align:center">${+d.date.slice(5, 7)}/${+d.date.slice(8)}</th>`).join('')}</tr>
     ${kws.map(k => `<tr><th>${esc(k)}</th>${recent.map(d => { const c = d.analysis.candidates.find(x => x.kw === k); const f = c ? c.freq : 0;
       return `<td title="${esc(k)} ${d.date}: ${(f * 100).toFixed(1)}%" style="background:rgba(36,87,214,${(0.08 + 0.8 * f / maxF).toFixed(2)})">${c && c.selected ? '●' : ''}</td>`; }).join('')}</tr>`).join('')}
     </table></div>
-  <div class="card"><h2>급상승 이슈어 <span class="sub">최근 3일 vs 그 이전 출현율</span></h2>
+  <div class="card"><h2>급상승 이슈어 <span class="sub">최근 3일 vs 그 이전 출현율 · 선별 + 표본 기사 전체 기준</span></h2>
     <table><tr><th>단어</th><th class="num">최근 3일</th><th class="num">이전</th><th class="num">배율</th></tr>
     ${rising.map(r => `<tr><td>${esc(r[0])}</td><td class="num">${(r[1] * 100).toFixed(1)}%</td><td class="num">${(r[2] * 100).toFixed(1)}%</td><td class="num">${r[3].toFixed(1)}×</td></tr>`).join('')}</table></div>`;
 }
@@ -748,7 +821,7 @@ function periodRows(q, days) {
   const dayArts = d => d.keywords.flatMap(k => k.articles.map(a => ({ ...a, date: d.date })));
   const today = days[days.length - 1];
   const base = new Date(today.date + 'T00:00:00');
-  const rows = [{ label: '오늘', target: today.date, from: today.date, to: today.date, nDays: 1, arts: dayArts(today).filter(match) }];
+  const rows = [{ label: '오늘', target: today.date, from: today.date, to: today.date, nDays: 1, arts: dayArts(today).filter(match), pool: signalPool([today]).filter(match) }];
   for (const def of PERIOD_DEFS) {
     const t = new Date(base);
     if (def.d) t.setDate(t.getDate() - def.d);
@@ -758,13 +831,13 @@ function periodRows(q, days) {
     const used = days.filter(d => d.date >= ymd(lo) && d.date <= ymd(hi) && d.date < today.date);
     const seen = new Set(), arts = [];
     for (const d of used) for (const a of dayArts(d)) if (match(a) && !seen.has(a.url)) { seen.add(a.url); arts.push(a); }
-    rows.push({ label: def.label, target: ymd(t), from: used.length ? used[0].date : '', to: used.length ? used[used.length - 1].date : '', nDays: used.length, arts });
+    rows.push({ label: def.label, target: ymd(t), from: used.length ? used[0].date : '', to: used.length ? used[used.length - 1].date : '', nDays: used.length, arts, pool: signalPool(used).filter(match) });
   }
   const qTok = new Set(tokens(q || ''));
   const generic = new Set(['부동산', '아파트', '주택', '시장', '서울', '정부', '전국']);
   for (const r of rows) {
     r.terms = topTerms(r.arts, 8, new Set([...qTok, ...generic]));
-    r.sig = marketSignals(r.arts).filter(shownSig);
+    r.sig = marketSignals(r.pool || r.arts).filter(shownSig);
     r.key = textRank(r.arts.filter(a => !/(\.\.\.|…)\s*$/.test(a.title || '')).map(a => ({ text: a.title, art: a, weight: Math.log(2 + (a.coverage || 1)) })), 3);
   }
   // 시기별로 두드러진 단어 표시: 과거 시기는 '오늘 핵심어에 없는 단어', 오늘은 '과거 어느 시기에도 없던 단어'

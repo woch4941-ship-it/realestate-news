@@ -573,13 +573,14 @@ for ($i = 0; $i -lt $corpus.Count; $i++) {
 $issueTerms = @($termDf.GetEnumerator() | Where-Object { $_.Value -ge 3 } | Sort-Object Value -Descending | Select-Object -First 30 |
     ForEach-Object { [ordered]@{ term = $_.Key; df = $_.Value; docs = @($termDocs[$_.Key]) } })
 
-# 팝업에 쓰는 표본 기사만 골라 저장하고, 번호를 새 목록 기준으로 바꿈
+# 표본 기사 제목 전체를 저장 (시장 지표 판정 재료 + 이슈어/키워드 팝업용)
+# 팝업에서 링크로 쓰는 기사만 주소(u)를 남겨 파일 크기를 줄임
+$linked = New-Object 'System.Collections.Generic.HashSet[int]'
+foreach ($row in @($analysis.table) + @($issueTerms)) { foreach ($i in @($row.docs)) { [void]$linked.Add([int]$i) } }
 $sampleArts = New-Object System.Collections.ArrayList
-$remap = @{}
-foreach ($row in @($analysis.table) + @($issueTerms)) {
-    $row.docs = @($row.docs | ForEach-Object {
-        if (-not $remap.ContainsKey($_)) { $remap[$_] = $sampleArts.Count; [void]$sampleArts.Add($corpusMeta[$_]) }
-        $remap[$_] })
+for ($i = 0; $i -lt $corpusMeta.Count; $i++) {
+    $m = $corpusMeta[$i]
+    if ($linked.Contains($i)) { [void]$sampleArts.Add($m) } else { [void]$sampleArts.Add([ordered]@{ t = $m.t; p = $m.p }) }
 }
 
 # 키워드별 기사 수집
