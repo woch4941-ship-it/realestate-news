@@ -26,6 +26,8 @@ New-Item -ItemType Directory -Force -Path $DaysDir, $LogDir | Out-Null
 # 항상 한국 시간(KST) 기준 - GitHub 서버(UTC)에서 실행돼도 날짜가 어긋나지 않도록
 function Get-Kst { return [DateTime]::UtcNow.AddHours(9) }
 if (-not $Date) { $Date = (Get-Kst).ToString('yyyy-MM-dd') }
+# 과거 날짜를 지정하면(-Date 2026-09-01) 그날 하루치 기사를 기간 검색으로 모음 (과거 기록 채우기용)
+$IsBackfill = ($Date -lt (Get-Kst).ToString('yyyy-MM-dd'))
 # 웹 공개용 실행(PUBLIC_SITE=1)이면 기사 요약문을 저장하지 않음 (저작권 보호)
 $PublicSite = ($env:PUBLIC_SITE -eq '1')
 # 네이버 API 키는 환경변수로도 지정 가능 (GitHub Secrets 용)
@@ -141,6 +143,7 @@ function New-Article($title, $url, $press, $snippet, $source, $rank) {
 function Search-Google([string]$query, [string]$after = '', [string]$before = '') {
     $list = New-Object System.Collections.ArrayList
     # 기간 지정 시 after:/before: (before 는 해당일 미포함), 아니면 최근 1일
+    if (-not $after -and $IsBackfill) { $after = $Date; $before = ([datetime]::ParseExact($Date, 'yyyy-MM-dd', $null)).AddDays(1).ToString('yyyy-MM-dd') }
     $q = if ($after) { "$query after:$after before:$before" } else { "$query when:1d" }
     $url = 'https://news.google.com/rss/search?q=' + [uri]::EscapeDataString($q) + '&hl=ko&gl=KR&ceid=KR:ko'
     $text = Get-Web $url
@@ -188,6 +191,7 @@ function Search-NaverApi([string]$query) {
 # 같은 이슈의 하위 기사는 .tit 만 연속으로 나오고, ".more"(관련뉴스 N건)로 묶음이 끝남
 # 기간 지정($ds,$de: yyyy.MM.dd) 시에는 API 대신 검색 화면을 사용 (API는 기간 검색 미지원)
 function Search-Naver([string]$query, [int]$pages = 0, [string]$ds = '', [string]$de = '') {
+    if (-not $ds -and $IsBackfill) { $ds = $Date.Replace('-', '.'); $de = $ds }
     if (-not $ds -and $Config.naverApi.clientId -and $Config.naverApi.clientSecret) { return Search-NaverApi $query }
     if ($pages -le 0) { $pages = [int]$Config.naverPages }
     $period = if ($ds) { "&pd=3&ds=$ds&de=$de" } else { '&pd=4' }
@@ -433,7 +437,8 @@ function Get-MolitPolicies([hashtable]$known) {
             $id = 'molit-' + $m.Groups[1].Value
             $title = Clean-Text $m.Groups[2].Value
             $field = $m.Groups[3].Value.Trim()
-            if (-not ($field -eq '주택토지' -or $title -match $PolicyRe)) { continue }
+            # 국토교통부 분야 중 '주택토지'·'건설'은 전부, 그 밖의 분야는 제목에 부동산 단어가 있을 때만
+            if (-not ($field -in @('주택토지', '건설') -or $title -match $PolicyRe)) { continue }
             $views = [int]($m.Groups[5].Value -replace '\D', '0')
             if ($known.ContainsKey($id)) { $known[$id].views = $views; continue }
             $url = $base + 'dtl.jsp?id=' + $m.Groups[1].Value
@@ -518,8 +523,8 @@ $histFile = Join-Path $DataDir 'keyword_history.json'
 $history = $null
 if (Test-Path $histFile) { $history = Get-Content $histFile -Raw -Encoding UTF8 | ConvertFrom-Json }
 
-Log '네이버 많이 본 뉴스 랭킹 수집'
-$popular = Get-NaverPopular
+Log $(if ($IsBackfill) { '과거 날짜 수집: 네이버 많이 본 뉴스 랭킹은 건너뜀' } else { '네이버 많이 본 뉴스 랭킹 수집' })
+if ($IsBackfill) { $popular = @{ ids = (New-Object 'System.Collections.Generic.HashSet[string]'); titles = @() } } else { $popular = Get-NaverPopular }
 Log "  랭킹 기사 $($popular.ids.Count)건"
 
 Log '기초 말뭉치 수집 (연관도 분석용)'

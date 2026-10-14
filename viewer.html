@@ -70,6 +70,13 @@ details.others ul{margin:6px 0 0;padding-left:18px;font-size:13.5px}
 .sig .end.pos,.sig .siglab.pos{color:var(--up)} .sig .end.neg,.sig .siglab.neg{color:var(--down)}
 .evh{font-weight:700;font-size:13px;margin:10px 0 2px}
 .method dl{margin:0} .method dt{font-weight:700;margin-top:14px} .method dt:first-child{margin-top:0}
+.method summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;font-size:16px}
+.method summary::-webkit-details-marker{display:none}
+.method summary .more{margin-left:auto;font-size:13px;color:var(--accent);font-weight:600}
+.method summary .more::after{content:" ▾"}
+.method[open] summary .more{font-size:0}
+.method[open] summary .more::after{content:"접기 ▴";font-size:13px}
+.method[open] summary{margin-bottom:12px}
 .method dd{margin:4px 0 0;color:var(--muted);font-size:13.5px;line-height:1.75}
 .method dd b{color:var(--ink);font-weight:600} .method ul{margin:4px 0;padding-left:18px}
 .method table.mt{margin:8px 0;font-size:13px} .method table.mt td,.method table.mt th{white-space:normal}
@@ -486,7 +493,8 @@ function renderBrief(v, day) {
 
 function methodHtml(day) {
   const n = day.keywords.length;
-  return `<div class="card method"><h2>용어 및 산출 근거</h2>
+  // 접이식(아코디언): 평소엔 제목만 보이고 "자세히 보기"를 누르면 펼쳐짐
+  return `<details class="card method"><summary><b>용어 및 산출 근거</b> <span class="more">자세히 보기</span></summary>
   <dl>
     <dt>핵심 키워드 (${n}개)</dt>
     <dd>“부동산·아파트·주택 시장·부동산 정책”으로 검색한 최근 24시간 기사 ${day.analysis.corpusSize}건을 표본으로 씁니다.
@@ -533,7 +541,7 @@ function methodHtml(day) {
 
     <dt>오늘의 이슈어 · 표본 전체 이슈어</dt>
     <dd>기사에서 조사를 떼어낸 단어 가운데 일반 단어(기자, 오늘, 부동산 등)를 빼고, 그 단어가 등장한 기사 수가 많은 순으로 보여줍니다. ‘오늘의 이슈어’는 선별 기사 기준, ‘표본 전체 이슈어’는 키워드 분석 표본 전체 기준입니다.</dd>
-  </dl></div>`;
+  </dl></details>`;
 }
 
 function renderNews(v, day) {
@@ -687,7 +695,7 @@ function periodRows(q, days) {
   for (const r of rows) r.uniq = new Set([...set(r)].filter(t => r.label === '오늘' ? !pastSet.has(t) : !todaySet.has(t)));
   return rows;
 }function periodNarrative(q, rows) {
-  const pick = ['6년 전', '3년 전', '1년 전', '6개월 전', '1달 전', '오늘'].map(l => rows.find(r => r.label === l)).filter(r => r && r.terms.length);
+  const pick = ['6년 전', '3년 전', '1년 전', '6개월 전', '3달 전', '1달 전', '1주 전', '1일 전', '오늘'].map(l => rows.find(r => r.label === l)).filter(r => r && r.terms.length);
   if (pick.length < 2) return '';
   const subj = q ? `‘${q}’ 관련 보도의` : '부동산 보도의';
   return `${subj} 핵심어는 ` + pick.map(r => `${r.label} ‘${r.terms.slice(0, 2).map(t => t[0]).join('·')}’`).join(' → ') + ' 순으로 바뀌었습니다.';
@@ -746,7 +754,8 @@ const POLICY_CATS = [
   ['임대차·전세', /전세|월세|임대차|임차|세입자|보증금/],
   ['청약·분양', /청약|분양/],
   ['정비사업', /재건축|재개발|정비사업|노후계획도시|리모델링|이주비/],
-  ['시장·통계', /거래|실거래|동향|통계|점검회의|단속|이상거래|토지거래허가|주택가격/]
+  ['시장·통계', /거래|실거래|동향|통계|점검회의|이상거래|토지거래허가|주택가격/],
+  ['건설', /건설|하도급|시공|공사비|건설사|건설현장|안전점검|부실시공|건설업/]
 ];
 function policyCats(p) {
   const t = p.title + ' ' + (p.points || []).join(' ');
@@ -805,7 +814,7 @@ async function renderPolicy(v) {
     <div id="plist"></div>
   </div>
   <p class="note">출처: 국토교통부 보도자료(www.molit.go.kr), 금융위원회 보도자료(www.fsc.go.kr). 정부 보도자료는 공공누리에 따라 출처를 밝히고 이용할 수 있습니다.
-    국토교통부는 ‘주택토지’ 분야와 부동산 관련 제목, 금융위원회는 부동산·주택·대출 관련 제목만 모읍니다. 분야 분류는 제목·요점 단어 기준 자동 분류입니다.</p>`;
+    국토교통부는 ‘주택토지’·‘건설’ 분야 전체와 그 밖의 분야 중 부동산 관련 제목, 금융위원회는 부동산·주택·대출 관련 제목만 모읍니다. 분야 분류는 제목·요점 단어 기준 자동 분류입니다.</p>`;
   draw();
   $('#pq').oninput = e => { state.pq = e.target.value; draw(); };
   $('#psrc').onchange = e => { state.psrc = e.target.value; draw(); };
