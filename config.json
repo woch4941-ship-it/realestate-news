@@ -1,5 +1,5 @@
 {
-  "keywordCount": 5,
+  "keywordCount": 6,
   "articlesPerKeyword": 10,
   "naverPages": 2,
   "requestDelayMs": 1200,
@@ -13,7 +13,7 @@
 
   "corpusQueries": ["부동산", "아파트", "주택 시장", "부동산 정책"],
 
-  "fallbackKeywords": ["집값", "전세", "주택담보대출", "청약", "재건축"],
+  "fallbackKeywords": ["집값", "전세", "주택담보대출", "청약", "재건축", "미분양"],
 
   "candidates": [
     { "kw": "집값",         "query": "집값",               "aliases": ["집값", "아파트값", "아파트 가격", "매매가", "주택가격"] },
