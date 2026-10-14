@@ -6,6 +6,12 @@
   "maxKeywordOverlap": 0.5,
   "minDocFreq": 3,
 
+  "policy": {
+    "enabled": true,
+    "pages": 2,
+    "maxItems": 1500
+  },
+
   "naverApi": {
     "clientId": "",
     "clientSecret": ""

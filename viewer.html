@@ -93,6 +93,20 @@ svg text{fill:var(--ink);font-size:11px}
 .hm td{text-align:center;padding:4px;font-size:11.5px}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:8px 14px;border-radius:8px;font-size:13px;opacity:0;transition:.2s}
 .toast.on{opacity:1}
+.chip.uniq{font-weight:700;color:var(--ink);border-color:var(--accent)}
+.ptable td,.ptable th{vertical-align:top}
+.ptable .chips{gap:4px}
+details.pd{border-top:1px solid var(--line);padding:8px 0;margin:0}
+details.pd summary{color:var(--ink);font-size:14px}
+details.pd ol,details.pd ul{margin:8px 0 4px}
+.pday{font-weight:700;margin:16px 0 4px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.pol{padding:10px 0 12px;border-bottom:1px dashed var(--line)}
+.pol .t{font-weight:700;font-size:15.5px;line-height:1.45;display:block;margin:4px 0}
+.pol ul.pts{margin:4px 0;padding-left:18px;font-size:14px}
+.pol ul.pts li{margin:2px 0}
+.badge.src-molit{background:#1f6f5c;color:#fff}
+.badge.src-fsc{background:#7a4cc2;color:#fff}
+.searchbox select{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:8px}
 .btn.admin{border-color:var(--accent);color:var(--accent);font-weight:600}
 dialog.trig{border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);padding:20px;width:min(360px,calc(100vw - 32px))}
 dialog.trig::backdrop{background:rgba(0,0,0,.35)}
@@ -112,12 +126,13 @@ dialog.trig .st{font-size:13px;color:var(--muted);min-height:20px;margin:8px 0 0
       <select id="dateSel"></select>
       <button class="btn" id="next" title="다음 날짜">▶</button>
       <button class="btn" id="latest">최신</button>
-      <button class="btn admin" id="collectNow" hidden title="지금 뉴스 수집 (관리자 전용)">⟳ 지금 수집</button>
+      <button class="btn admin" id="collectNow" hidden title="GitHub에서 뉴스를 지금 새로 수집합니다 (관리자 전용)">뉴스 수집하기</button>
     </div>
   </div>
   <nav class="tabs" id="tabs">
     <button data-tab="brief">종합 브리핑</button>
     <button data-tab="news">키워드별 뉴스</button>
+    <button data-tab="policy">부동산 정책</button>
     <button data-tab="analysis">키워드 연관도 분석</button>
     <button data-tab="trend">추이</button>
     <button data-tab="search">과거 기사 검색</button>
@@ -412,6 +427,7 @@ async function render() {
   $('#collected').textContent = meta ? `${fmtDate(meta.date)} · 수집 ${meta.collectedAt.slice(11, 16)}${i === 0 ? ' · 최신' : ' · 과거 기록'}` : '';
   if (state.tab === 'trend') return renderTrend(v);
   if (state.tab === 'search') return renderSearch(v);
+  if (state.tab === 'policy') return renderPolicy(v);
   v.innerHTML = '<div class="empty">불러오는 중…</div>';
   let day;
   try { day = await loadDay(state.date); } catch (e) { v.innerHTML = `<div class="card empty">${esc(e.message)}</div>`; return; }
@@ -619,25 +635,183 @@ function lineSvg(points, posLabel, negLabel) {
   </svg>`;
 }
 
+/* 별도 데이터 파일(policies.js, periods.js)을 필요할 때 한 번만 불러옴 */
+function loadGlobal(name, src) {
+  if (window[name]) return Promise.resolve(window[name]);
+  return new Promise(res => {
+    const s = document.createElement('script');
+    s.src = src + (window.IS_WEB ? '?v=' + Date.now() : '');
+    s.onload = () => res(window[name] || null);
+    s.onerror = () => res(null);
+    document.head.appendChild(s);
+  });
+}
+
+/* ================================================================ 과거 기사 검색 + 시기별 비교 */
+/* 시기 정의: 기준일(가장 최근 수집일)에서 거슬러 올라간 시점 ± 허용 범위(일).
+   매일 쌓인 수집 기록 중 그 범위에 있는 날들의 기사를 모아 비교한다. 기록이 없으면 '기록 없음'. */
+const PERIOD_DEFS = [
+  { label: '1일 전', d: 1, win: 0 }, { label: '1주 전', d: 7, win: 1 }, { label: '1달 전', m: 1, win: 3 }, { label: '3달 전', m: 3, win: 7 },
+  { label: '6개월 전', m: 6, win: 10 }, { label: '1년 전', y: 1, win: 15 }, { label: '3년 전', y: 3, win: 30 }, { label: '6년 전', y: 6, win: 30 }
+];
+const ymd = dt => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+function periodRows(q, days) {
+  const terms = q ? q.toLowerCase().split(/\s+/).filter(Boolean) : [];
+  const match = a => !terms.length || terms.every(w => ((a.title || '') + ' ' + (a.snippet || '')).toLowerCase().includes(w));
+  const dayArts = d => d.keywords.flatMap(k => k.articles.map(a => ({ ...a, date: d.date })));
+  const today = days[days.length - 1];
+  const base = new Date(today.date + 'T00:00:00');
+  const rows = [{ label: '오늘', target: today.date, from: today.date, to: today.date, nDays: 1, arts: dayArts(today).filter(match) }];
+  for (const def of PERIOD_DEFS) {
+    const t = new Date(base);
+    if (def.d) t.setDate(t.getDate() - def.d);
+    if (def.m) t.setMonth(t.getMonth() - def.m);
+    if (def.y) t.setFullYear(t.getFullYear() - def.y);
+    const lo = new Date(t), hi = new Date(t); lo.setDate(lo.getDate() - def.win); hi.setDate(hi.getDate() + def.win);
+    const used = days.filter(d => d.date >= ymd(lo) && d.date <= ymd(hi) && d.date < today.date);
+    const seen = new Set(), arts = [];
+    for (const d of used) for (const a of dayArts(d)) if (match(a) && !seen.has(a.url)) { seen.add(a.url); arts.push(a); }
+    rows.push({ label: def.label, target: ymd(t), from: used.length ? used[0].date : '', to: used.length ? used[used.length - 1].date : '', nDays: used.length, arts });
+  }
+  const qTok = new Set(tokens(q || ''));
+  const generic = new Set(['부동산', '아파트', '주택', '시장', '서울', '정부', '전국']);
+  for (const r of rows) {
+    r.terms = topTerms(r.arts, 8, new Set([...qTok, ...generic]));
+    r.sig = marketSignals(r.arts).filter(shownSig);
+    r.key = textRank(r.arts.filter(a => !/(\.\.\.|…)\s*$/.test(a.title || '')).map(a => ({ text: a.title, art: a, weight: Math.log(2 + (a.coverage || 1)) })), 3);
+  }
+  // 시기별로 두드러진 단어 표시: 과거 시기는 '오늘 핵심어에 없는 단어', 오늘은 '과거 어느 시기에도 없던 단어'
+  const set = r => new Set(r.terms.map(t => t[0]));
+  const todaySet = new Set(topTerms(rows[0].arts, 20, qTok).map(t => t[0]));
+  const pastSet = new Set(rows.slice(1).flatMap(r => topTerms(r.arts, 20, qTok).map(t => t[0])));
+  for (const r of rows) r.uniq = new Set([...set(r)].filter(t => r.label === '오늘' ? !pastSet.has(t) : !todaySet.has(t)));
+  return rows;
+}function periodNarrative(q, rows) {
+  const pick = ['6년 전', '3년 전', '1년 전', '6개월 전', '1달 전', '오늘'].map(l => rows.find(r => r.label === l)).filter(r => r && r.terms.length);
+  if (pick.length < 2) return '';
+  const subj = q ? `‘${q}’ 관련 보도의` : '부동산 보도의';
+  return `${subj} 핵심어는 ` + pick.map(r => `${r.label} ‘${r.terms.slice(0, 2).map(t => t[0]).join('·')}’`).join(' → ') + ' 순으로 바뀌었습니다.';
+}
+function periodHtml(q, rows, days) {
+  const chip = (t, r) => `<span class="chip static${r.uniq.has(t[0]) ? ' uniq' : ''}">${esc(t[0])}</span>`;
+  const sigTxt = r => r.sig.length ? r.sig.map(s => `<span class="${s.v > 0.15 ? 'pos' : s.v < -0.15 ? 'neg' : ''}">${esc(s.id)} ${aspectLabel(s)}</span>`).join('<br>') : '<span class="note">근거 부족</span>';
+  return `<div class="card"><h2>시기별 비교 <span class="sub">${q ? `“${esc(q)}”` : '부동산 전반'} · 기준일 ${esc(rows[0].target)}</span></h2>
+    ${periodNarrative(q, rows) ? `<p class="narr">${esc(periodNarrative(q, rows))}</p>` : ''}
+    <div class="scroll"><table class="ptable"><tr><th>시기</th><th>기간</th><th class="num">관련 기사</th><th>핵심어 <span class="note">(굵게 = 그 시기에 두드러진 단어)</span></th><th>시장 지표</th></tr>
+    ${rows.map(r => !r.nDays
+      ? `<tr><td><b>${esc(r.label)}</b></td><td class="note">${esc(r.target)} 전후</td><td colspan="3" class="note">아직 기록 없음 — 수집 기록이 쌓이면 자동으로 채워집니다</td></tr>`
+      : `<tr><td><b>${esc(r.label)}</b></td><td class="note">${r.from === r.to ? esc(r.from) : `${esc(r.from)}<br>~${esc(r.to)} (${r.nDays}일)`}</td>
+      <td class="num">${r.arts.length}</td><td style="white-space:normal"><div class="chips">${r.terms.map(t => chip(t, r)).join('') || '<span class="note">-</span>'}</div></td>
+      <td style="white-space:normal;font-size:12.5px">${sigTxt(r)}</td></tr>`).join('')}
+    </table></div>
+    <h2 style="margin-top:18px">시기별 대표 기사</h2>
+    ${rows.filter(r => r.nDays).map(r => `<details class="others pd"><summary><b>${esc(r.label)}</b> · ${r.arts.length}건${r.key[0] ? ` — ${esc(r.key[0].text)}` : ''}</summary>
+      ${r.key.length ? `<ol class="keysent">${r.key.map(s => `<li><a href="${safeUrl(s.art.url)}" target="_blank" rel="noopener">${esc(s.text)}</a> <span class="src">${esc(s.art.press || '')} ${esc(s.art.date || '')}</span></li>`).join('')}</ol>` : '<p class="note">관련 기사가 없습니다.</p>'}
+      ${r.arts.length > 3 ? `<ul>${r.arts.filter(a => !r.key.some(k => k.art === a)).slice(0, 7).map(a => `<li><a href="${safeUrl(a.url)}" target="_blank" rel="noopener">${esc(a.title)}</a> <span class="src">${esc(a.press || '')}</span></li>`).join('')}</ul>` : ''}
+    </details>`).join('')}
+    <p class="note">※ 매일 쌓인 수집 기록(하루 약 60건)으로 비교합니다. 현재 기록은 ${days.length}일치(${esc(days[0].date)} ~ ${esc(days[days.length - 1].date)})이며,
+      각 시기는 기준일에서 거슬러 올라간 날짜 전후(1주 전 ±1일, 1달 전 ±3일, 3달 전 ±7일, 6개월 전 ±10일, 1년 전 ±15일, 3·6년 전 ±30일)의 기록을 모아 씁니다.
+      시장 지표는 근거 기사 3건 이상일 때만 표시합니다.</p></div>`;
+}
+
 async function renderSearch(v) {
-  v.innerHTML = `<div class="searchbox"><input id="q" placeholder="과거 수집 기사 전체에서 검색 (예: 재건축, 강남, 전세사기)" value="${esc(state.q || '')}"><button class="btn" id="go">검색</button></div><div id="res" class="card"><p class="note">검색어를 입력하세요. 전체 ${INDEX.length}일치 기록을 검색합니다.</p></div>`;
+  v.innerHTML = `<div class="searchbox"><input id="q" placeholder="검색어 (예: 재건축, 전세사기, 금리) · 비우면 부동산 전반 비교" value="${esc(state.q || '')}"><button class="btn" id="go">검색</button></div>
+    <div id="cmp"><div class="card"><p class="note">시기별 자료 불러오는 중…</p></div></div><div id="res"></div>`;
   const run = async () => {
     const q = $('#q').value.trim(); state.q = q;
-    if (!q) return;
-    $('#res').innerHTML = '<p class="note">검색 중…</p>';
+    $('#cmp').innerHTML = '<div class="card"><p class="note">분석 중…</p></div>';
     const days = await loadAll();
+    if (!days.length) { $('#cmp').innerHTML = '<div class="card"><p class="note">수집 기록이 없습니다.</p></div>'; return; }
+    $('#cmp').innerHTML = periodHtml(q, periodRows(q, days), days);
+    if (!q) { $('#res').innerHTML = ''; return; }
     const terms = q.toLowerCase().split(/\s+/);
     const hits = [];
     for (const d of days.slice().reverse()) for (const k of d.keywords) for (const a of k.articles) {
       const t = (a.title + ' ' + (a.snippet || '') + ' ' + k.keyword).toLowerCase();
       if (terms.every(w => t.includes(w))) hits.push({ a, d: d.date, k: k.keyword });
     }
-    $('#res').innerHTML = `<h2>“${esc(q)}” 검색 결과 ${hits.length}건</h2>` + (hits.slice(0, 200).map(h =>
-      `<div class="art"><div class="body"><div class="meta">${esc(h.d)} · #${esc(h.k)}</div>${articleHtml(h.a, '').replace('<div class="art"><div class="rk"></div>', '<div>')}</div></div>`).join('') || '<p class="note">결과가 없습니다.</p>');
+    $('#res').innerHTML = `<div class="card"><h2>수집 기록 검색 결과 <span class="sub">“${esc(q)}” · ${INDEX.length}일치 기록 중 ${hits.length}건</span></h2>` + (hits.slice(0, 200).map(h =>
+      `<div class="art"><div class="body"><div class="meta">${esc(h.d)} · #${esc(h.k)}</div>${articleHtml(h.a, '').replace('<div class="art"><div class="rk"></div>', '<div>')}</div></div>`).join('') || '<p class="note">결과가 없습니다.</p>') + '</div>';
   };
   $('#go').onclick = run;
   $('#q').onkeydown = e => { if (e.key === 'Enter') run(); };
-  if (state.q) run();
+  run();
+}
+
+/* ================================================================ 부동산 정책 (정부 보도자료) */
+const POLICY_CATS = [
+  ['공급', /공급|착공|인허가|신도시|택지|공공주택|매입임대|주택건설|입주|복합사업/],
+  ['대출·금융', /대출|DSR|LTV|PF|가계부채|금융|보증(?!금)|주담대|이차보전|자금/],
+  ['세제', /과세|세제|공시가격|보유세|종부세|양도세|취득세|재산세/],
+  ['임대차·전세', /전세|월세|임대차|임차|세입자|보증금/],
+  ['청약·분양', /청약|분양/],
+  ['정비사업', /재건축|재개발|정비사업|노후계획도시|리모델링|이주비/],
+  ['시장·통계', /거래|실거래|동향|통계|점검회의|단속|이상거래|토지거래허가|주택가격/]
+];
+function policyCats(p) {
+  const t = p.title + ' ' + (p.points || []).join(' ');
+  const c = POLICY_CATS.filter(([, re]) => re.test(t)).map(([n]) => n).slice(0, 2);
+  return c.length ? c : ['기타'];
+}
+async function renderPolicy(v) {
+  v.innerHTML = '<div class="empty">정책 자료 불러오는 중…</div>';
+  const all = await loadGlobal('POLICIES', 'data/policies.js');
+  if (!all || !all.length) { v.innerHTML = '<div class="card empty">정책 자료가 아직 없습니다. 다음 수집부터 표시됩니다.</div>'; return; }
+  const base = new Date((INDEX[0] ? INDEX[0].date : all[0].date) + 'T00:00:00');
+  const daysAgo = p => (base - new Date(p.date + 'T00:00:00')) / 864e5;
+  all.forEach(p => p.cats = p.cats || policyCats(p));
+  const week = all.filter(p => daysAgo(p) <= 7), month = all.filter(p => daysAgo(p) <= 30);
+  const bySrc = s => month.filter(p => p.source === s).length;
+  const catCount = n => month.filter(p => p.cats.includes(n)).length;
+  const keyItems = [];
+  for (const p of week) [p.title, ...(p.points || [])].forEach((t, i) => keyItems.push({ text: t, art: p, isTitle: !i, weight: Math.log(10 + (p.views || 0)) * (i ? 1 : 1.2) }));
+  const key = textRank(keyItems, 4, it => it.art.id);  // 보도자료당 1문장
+  const cats = ['전체', ...POLICY_CATS.map(c => c[0]), '기타'];
+  state.pcat = state.pcat || '전체'; state.psrc = state.psrc || '전체';
+
+  const draw = () => {
+    const pq = (state.pq || '').toLowerCase();
+    const list = all.filter(p => (state.pcat === '전체' || p.cats.includes(state.pcat)) && (state.psrc === '전체' || p.source === state.psrc)
+      && (!pq || (p.title + ' ' + (p.points || []).join(' ') + ' ' + (p.dept || '')).toLowerCase().includes(pq)));
+    const groups = [];
+    for (const p of list.slice(0, 150)) { const g = groups[groups.length - 1]; if (g && g.date === p.date) g.items.push(p); else groups.push({ date: p.date, items: [p] }); }
+    $('#plist').innerHTML = `<p class="note" style="margin:0 0 8px">${list.length}건${list.length > 150 ? ' (최근 150건 표시)' : ''}</p>` + (groups.map(g => `
+      <div class="pday">${esc(g.date)} <span class="note">${fmtDate(g.date)}</span></div>
+      ${g.items.map(p => `<div class="pol"><div class="meta"><span class="badge src-${p.source === '국토교통부' ? 'molit' : 'fsc'}">${esc(p.source)}</span>${p.cats.map(c => `<span class="badge cov">${esc(c)}</span>`).join('')}
+          ${esc(p.dept || '')}${p.views ? ` · 조회 ${Number(p.views).toLocaleString()}` : ''}</div>
+        <a class="t" href="${safeUrl(p.url)}" target="_blank" rel="noopener">${esc(p.title)}</a>
+        ${(p.points || []).length ? `<ul class="pts">${p.points.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+        <div class="meta">${(p.files || []).map(f => `<a href="${safeUrl(f.url)}" target="_blank" rel="noopener">📄 ${esc(f.name)} 원문</a> · `).join('')}<a href="${safeUrl(p.url)}" target="_blank" rel="noopener">보도자료 페이지 ↗</a></div>
+        ${p.body ? `<details class="others"><summary>본문 일부 보기</summary><p class="note">${esc(p.body)}</p></details>` : ''}
+      </div>`).join('')}`).join('') || '<p class="note">조건에 맞는 자료가 없습니다.</p>');
+  };
+
+  v.innerHTML = `
+  <div class="kpis">
+    <div class="kpi"><b>${week.length}</b><span>최근 7일 발표</span></div>
+    <div class="kpi"><b>${month.length}</b><span>최근 30일 발표</span></div>
+    <div class="kpi"><b>${bySrc('국토교통부')}</b><span>국토교통부 (30일)</span></div>
+    <div class="kpi"><b>${bySrc('금융위원회')}</b><span>금융위원회 (30일)</span></div>
+  </div>
+  <div class="card"><h2>최근 7일 정책 요약 <span class="sub">정부 보도자료 요점 기준 · TextRank</span></h2>
+    ${key.length ? `<ol class="keysent">${key.map(s => `<li>${esc(s.text)} <a class="src" href="${safeUrl(s.art.url)}" target="_blank" rel="noopener">${esc(s.art.source)} ${esc(s.art.date.slice(5))} ↗</a></li>`).join('')}</ol>` : '<p class="note">최근 7일간 부동산 관련 발표가 없습니다.</p>'}
+    <div class="chips" style="margin-top:12px">${POLICY_CATS.map(c => `<span class="chip static">${c[0]} ${catCount(c[0])}</span>`).join('')}<span class="note" style="align-self:center">← 최근 30일 분야별 건수</span></div>
+  </div>
+  <div class="card">
+    <h2>발표 자료 목록</h2>
+    <div class="searchbox"><input id="pq" placeholder="정책 자료 검색 (예: 전세사기, PF, 공공재개발)" value="${esc(state.pq || '')}">
+      <select id="psrc">${['전체', '국토교통부', '금융위원회'].map(s => `<option ${s === state.psrc ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
+    <div class="chips" id="pcats" style="margin-bottom:12px">${cats.map(c => `<span class="chip ${c === state.pcat ? 'on' : ''}" data-c="${esc(c)}">${esc(c)}</span>`).join('')}</div>
+    <div id="plist"></div>
+  </div>
+  <p class="note">출처: 국토교통부 보도자료(www.molit.go.kr), 금융위원회 보도자료(www.fsc.go.kr). 정부 보도자료는 공공누리에 따라 출처를 밝히고 이용할 수 있습니다.
+    국토교통부는 ‘주택토지’ 분야와 부동산 관련 제목, 금융위원회는 부동산·주택·대출 관련 제목만 모읍니다. 분야 분류는 제목·요점 단어 기준 자동 분류입니다.</p>`;
+  draw();
+  $('#pq').oninput = e => { state.pq = e.target.value; draw(); };
+  $('#psrc').onchange = e => { state.psrc = e.target.value; draw(); };
+  v.querySelectorAll('#pcats [data-c]').forEach(c => c.onclick = () => {
+    state.pcat = c.dataset.c; v.querySelectorAll('#pcats .chip').forEach(x => x.classList.toggle('on', x === c)); draw();
+  });
 }
 
 /* ================================================================ 이벤트 */
@@ -694,7 +868,7 @@ async function runCollect(pw) {
       : `수집을 시작하지 못했습니다 (오류 ${res.status}).\n토큰에 Actions 읽기·쓰기 권한이 있는지 확인해 주세요.`);
     return;
   }
-  collecting = true; setBtn('⟳ 수집 중…', true);
+  collecting = true; setBtn('수집 중…', true);
   setStatus('수집을 시작했습니다. 보통 1~2분 걸립니다.\n이 창을 닫아도 계속 진행됩니다.');
   const prevStamp = INDEX[0] ? INDEX[0].collectedAt : '';
   try {
@@ -712,7 +886,7 @@ async function runCollect(pw) {
     if (!run || run.status !== 'completed') throw new Error('수집이 10분 안에 끝나지 않았습니다. GitHub Actions 기록을 확인해 주세요.');
     if (run.conclusion !== 'success') throw new Error('수집이 실패했습니다. GitHub Actions 기록을 확인해 주세요.');
     // 2) 웹사이트 반영 대기 (최대 5분): index.js 의 수집 시각이 바뀌면 새로고침
-    setBtn('⟳ 반영 중…', true);
+    setBtn('반영 중…', true);
     setStatus('수집 완료! 웹사이트에 반영하는 중입니다 (1~2분).');
     for (let i = 0; i < 30; i++) {
       await sleep(10000);
@@ -726,7 +900,7 @@ async function runCollect(pw) {
   } catch (e) {
     setStatus(e.message); toast(e.message);
   } finally {
-    collecting = false; setBtn('⟳ 지금 수집', false);
+    collecting = false; setBtn('뉴스 수집하기', false);
   }
 }
 
@@ -739,7 +913,15 @@ if (REPO) {
     <div class="row"><button class="btn" value="cancel" type="submit" formnovalidate>닫기</button><button class="btn admin" id="trigGo" type="button">수집 실행</button></div>
     <p class="st" id="trigStatus"></p></form></dialog>`);
   const dlg = $('#trigDlg');
-  btn.onclick = () => { if (!collecting) setStatus(''); $('#trigPw').value = ''; dlg.showModal(); $('#trigPw').focus(); };
+  btn.onclick = () => {
+    // 토큰 설정 전에는 비밀번호를 묻지 않고 GitHub Actions 화면으로 바로 안내 (GitHub 로그인이 주인 확인 역할)
+    if (!window.TRIGGER_KEY) {
+      window.open(`https://github.com/${REPO.owner}/${REPO.repo}/actions/workflows/${WORKFLOW}`, '_blank', 'noopener');
+      toast('GitHub 화면에서 Run workflow 를 누르면 수집됩니다');
+      return;
+    }
+    if (!collecting) setStatus(''); $('#trigPw').value = ''; dlg.showModal(); $('#trigPw').focus();
+  };
   const go = () => { if (collecting) return; const pw = $('#trigPw').value; $('#trigPw').value = ''; if (pw) runCollect(pw); };
   $('#trigGo').onclick = go;
   $('#trigPw').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); go(); } };
