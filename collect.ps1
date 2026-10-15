@@ -74,6 +74,15 @@ function Clean-Text([string]$s) {
     return ($s -replace '\s+', ' ').Trim()
 }
 
+# 스팸(도박 광고 등) 기사 거르기: 언론사·주소에 막을 이름이 있거나 제목에 스팸 단어가 있으면 제외 (config.json 의 spamFilter 에서 편집)
+$SpamPress = @($Config.spamFilter.blockPress | Where-Object { $_ })
+$SpamRe = if ($Config.spamFilter.words) { '(' + ((@($Config.spamFilter.words) | ForEach-Object { [regex]::Escape($_) }) -join '|') + ')' } else { $null }
+function Test-Spam([string]$title, [string]$press, [string]$url) {
+    foreach ($b in $SpamPress) { if (($press -and $press.Contains($b)) -or ($url -and $url.Contains($b))) { return $true } }
+    if ($SpamRe -and $title -match $SpamRe) { return $true }
+    return $false
+}
+
 function Norm-Key([string]$s) { return ($s -replace '[^\p{L}\p{N}]', '').ToLower() }
 
 function Get-Bigrams([string]$s) {
@@ -156,6 +165,7 @@ function Search-Google([string]$query, [string]$after = '', [string]$before = ''
         if ($it.source) { $press = if ($it.source.'#text') { $it.source.'#text' } else { [string]$it.source } }
         $title = Clean-Text $it.title
         if ($press -and $title.EndsWith(" - $press")) { $title = $title.Substring(0, $title.Length - $press.Length - 3) }
+        if (Test-Spam $title $press ([string]$it.link)) { continue }
         $a = New-Article $title $it.link $press '' 'google' $rank
         try { $a.pubDate = ([datetime]::Parse($it.pubDate)).ToString('yyyy-MM-dd HH:mm') } catch {}
         $script:ClusterSeq++
@@ -176,6 +186,7 @@ function Search-NaverApi([string]$query) {
     foreach ($it in $j.items) {
         $rank++
         $orig = if ($it.originallink) { $it.originallink } else { $it.link }
+        if (Test-Spam (Clean-Text $it.title) (Get-PressFromUrl $orig) $orig) { continue }
         $a = New-Article (Clean-Text $it.title) $orig (Get-PressFromUrl $orig) (Clean-Text $it.description) 'naver' $rank
         if ($it.link -match 'n\.news\.naver\.com') { $a.naverUrl = $it.link }
         try { $a.pubDate = ([datetime]::Parse($it.pubDate)).ToString('yyyy-MM-dd HH:mm') } catch {}
@@ -217,6 +228,7 @@ function Search-Naver([string]$query, [int]$pages = 0, [string]$ds = '', [string
                     $isMain = $afterProf -or -not $clusterId
                     if ($isMain) { $script:ClusterSeq++; $clusterId = "n$($script:ClusterSeq)"; $clusterArts = @() }
                     $press = if ($afterProf -and $pPress) { $pPress } else { Get-PressFromUrl $href }
+                    if (Test-Spam $text $press $href) { $afterProf = $false; $pPress = ''; $pNav = ''; $last = $null; $rank--; continue }
                     $a = New-Article $text $href $press '' 'naver' $rank
                     $a.cluster = $clusterId
                     if ($afterProf -and $pNav) { $a.naverUrl = $pNav }
@@ -577,6 +589,8 @@ $issueTerms = @($termDf.GetEnumerator() | Where-Object { $_.Value -ge 3 } | Sort
 # 팝업에서 링크로 쓰는 기사만 주소(u)를 남겨 파일 크기를 줄임
 $linked = New-Object 'System.Collections.Generic.HashSet[int]'
 foreach ($row in @($analysis.table) + @($issueTerms)) { foreach ($i in @($row.docs)) { [void]$linked.Add([int]$i) } }
+# 선정 키워드의 표본 기사는 전부 링크 저장 (함께 많이 쓰인 표현 근거·키워드별 뉴스 전체 탭)
+foreach ($sel in $analysis.selected) { foreach ($i in $sel.docs) { [void]$linked.Add([int]$i) } }
 $sampleArts = New-Object System.Collections.ArrayList
 for ($i = 0; $i -lt $corpusMeta.Count; $i++) {
     $m = $corpusMeta[$i]
