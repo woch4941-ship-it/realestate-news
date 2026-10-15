@@ -61,12 +61,15 @@ main{max-width:1120px;margin:0 auto;padding:20px 16px 60px}
 .kwtile .cnt{font-size:13px;font-weight:400;color:var(--muted);letter-spacing:0;margin-left:2px;white-space:nowrap}
 .kwtile .kwrow{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 6px;margin:0 0 8px}
 .kwtile .bubble{font-size:19px;font-weight:700;letter-spacing:-.3px;color:var(--ink)}
+.coline{font-size:14px;margin:0 0 10px;line-height:1.6}
+.coline .lab{font-size:12px;color:var(--muted);margin-right:4px}
+.coline .cnt{font-size:12.5px;color:var(--muted);margin-left:1px}
+.kwcard h3 .src{font-weight:400}
 .kwtile .coexp{font-size:15px;font-weight:700;line-height:1.4}
 .kwtile .meta{font-size:12.5px;color:var(--muted)}
 .kwtile .co{font-size:13px;color:var(--muted)}
 .kwtile .co em{font-style:normal;font-weight:700;color:var(--ink);margin-left:4px}
 .card > .kwtiles{margin-bottom:0}
-#daystats:empty{display:none}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
 .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
 .kpi b{display:block;font-size:24px;letter-spacing:-.5px}
@@ -144,6 +147,19 @@ td .tipword{border-bottom:1px dashed var(--muted)}
 .tm span{font-weight:700;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:clip}
 .tm small{opacity:.7}
 .tm:hover{filter:brightness(.92)}
+/* 줄과 열이 보이는 표 */
+table.gridtbl{border:1px solid var(--line);border-radius:8px;border-collapse:separate;border-spacing:0;overflow:hidden;table-layout:fixed}
+table.gridtbl th{background:var(--band);color:var(--band-ink);border-bottom:1px solid var(--band-line)}
+table.gridtbl th,table.gridtbl td{padding:8px 12px;border-right:1px solid var(--line)}
+table.gridtbl th:last-child,table.gridtbl td:last-child{border-right:0}
+table.gridtbl tr:last-child td{border-bottom:0}
+table.gridtbl tr:nth-child(odd) td{background:var(--bg)}
+table.gridtbl td.num,table.gridtbl th.num{text-align:right;font-variant-numeric:tabular-nums}
+.howto{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.howto summary{cursor:pointer;color:var(--accent);font-size:13.5px;font-weight:600}
+.howto .note{margin:8px 0 0}
+.kwarts{margin:6px 0 0;padding-left:18px;font-size:14px}
+.kwarts li{margin:5px 0;line-height:1.45}
 .chip.uniq{font-weight:700;color:var(--ink);border-color:var(--accent)}
 .ptable td,.ptable th{vertical-align:top}
 .ptable .chips{gap:4px}
@@ -171,7 +187,7 @@ dialog.trig .st{font-size:13px;color:var(--muted);min-height:20px;margin:8px 0 0
 <body>
 <header>
   <div class="topband"><div class="bar">
-    <div class="brand">부동산 데일리 브리핑<small id="collected">-</small><small id="daystats"></small></div>
+    <div class="brand">부동산 데일리 브리핑<small id="collected">-</small></div>
     <div class="datenav">
       <button class="btn" id="prev" title="이전 날짜">◀</button>
       <select id="dateSel"></select>
@@ -182,8 +198,8 @@ dialog.trig .st{font-size:13px;color:var(--muted);min-height:20px;margin:8px 0 0
   </div></div>
   <nav class="tabs" id="tabs">
     <button data-tab="brief">종합 브리핑</button>
-    <button data-tab="analysis">키워드 연관도 분석</button>
     <button data-tab="news">키워드별 뉴스</button>
+    <button data-tab="analysis">키워드 연관도 분석</button>
     <button data-tab="policy">부동산 정책</button>
     <button data-tab="trend">추이</button>
     <button data-tab="search">과거 기사 검색</button>
@@ -234,7 +250,7 @@ const JOSA = ['에서는','으로는','에서도','에게서','이라는','이�
 const STOP = new Set(('기자 뉴스 오늘 지난 올해 이번 관련 위해 대한 통해 따르면 밝혔다 있다 없다 것으로 지난해 이후 가운데 대해 최근 사진 '
   + '연합뉴스 뉴시스 종합 단독 속보 포토 영상 이날 한편 또한 있는 같은 위한 대비 기준 경우 정도 오전 오후 현재 부동산 아파트 주택 시장 '
   + '정부 이상 이하 가장 다시 모두 계획 예정 발표 진행 전망 우리 그는 하지만 이어 것은 것이 때문 등을 등의 바로 지금 만에 문제 개월 '
-  + '아냐 무슨 어떻게 대상 가능성 나서 필요 말했다 했다고 이라며 라며 이라고 강조 설명 언급 지적 주장 것으 따라 반면 실제 넘어 데다 함께 특히 다만 여전히 이는 해당 각각 보인다 나타났다 전년 동기 만원 억원 조원').split(' '));
+  + '아냐 무슨 어떻게 대상 가능성 나서 필요 말했다 했다고 이라며 라며 이라고 강조 설명 언급 지적 주장 것으 따라 반면 실제 넘어 데다 함께 특히 다만 여전히 이는 해당 각각 보인다 나타났다 전년 동기 만원 억원 조원 개월만 만에 년만').split(' '));
 function tokens(text) {
   const out = [];
   for (let w of (String(text).match(/[가-힣]{2,}|[A-Za-z]{2,}/g) || [])) {
@@ -286,7 +302,7 @@ function phraseTerms(arts, k, exclude, minDf) {
     .filter(w => !phrases.some(p => p.split(' ').includes(w) && df.get(p) >= 0.4 * df.get(w)));
   // 남은 단어는 '같은 기사에 함께 나오는 단어'와 짝지음: 그 단어가 나온 기사의 절반 이상에 함께 나오면 'A·B'
   const docTok = arts.map(a => new Set(tokenSegments((a.title || '') + ' . ' + (a.snippet || '')).flat().filter(Boolean)));
-  const GENERIC = new Set(['서울', '정부', '지역', '전국', '정책', '시장', '공급', '상승', '하락', '거래', '가격', '부동산', '아파트', '주택']);
+  const GENERIC = new Set(['서울', '정부', '지역', '전국', '정책', '시장', '공급', '거래', '가격', '부동산', '아파트', '주택']);
   const combos = new Map(), absorbed = new Set();
   for (const w of singles) {
     const co = new Map();
@@ -327,7 +343,8 @@ function phraseTerms(arts, k, exclude, minDf) {
 }
 
 /* 선정 키워드 + 함께 자주 나오는 표현 = 결합 키워드 (예: 집값 → 집값 급락, 청약 → 청약 · 불법 전매) */
-const KW_GENERIC = new Set(['서울', '정부', '지역', '전국', '정책', '시장', '상승', '하락', '거래', '가격', '부동산', '아파트', '주택', '공급', '수도권']);
+// 함께 많이 쓰인 표현에서 버리는 일반 단어. 상승·하락·급락·위축 같은 방향성 단어는 의미가 있으므로 남김
+const KW_GENERIC = new Set(['서울', '정부', '지역', '전국', '정책', '시장', '거래', '가격', '부동산', '아파트', '주택', '공급', '수도권']);
 /* 주요 키워드와 함께 쓰인 표현(최대 2개): 키워드가 든 붙은 표현의 나머지 말 + 함께 가장 많이 나온 표현 */
 /* 키워드 기사 전수: 선별 기사 + 표본 기사 중 그 키워드가 나온 기사 전체 (옛 기록은 선별 기사만) */
 function kwPool(day, kw) {
@@ -338,6 +355,34 @@ function kwPool(day, kw) {
     const k = normTitle(x.t); if (!seen.has(k)) { seen.add(k); out.push({ title: x.t, url: x.u || '', press: x.p || '' }); }
   }
   return out;
+}
+/* 연관 보도 = 키워드 분석 표본 기사 중 그 키워드(동의어 포함)가 나온 기사 수.
+   키워드 연관도 분석의 "출현 기사"와 같은 값 (주요 키워드·요약·키워드별 뉴스 공통) */
+function relCount(day, kw) {
+  const c = (day.analysis.candidates || []).find(x => x.kw === kw);
+  return c ? c.df : 0;
+}
+/* 연관 보도 많은 순서의 키워드 번호 목록 */
+function kwOrder(day) {
+  return day.keywords.map((k, i) => i).sort((a, b) => relCount(day, day.keywords[b].keyword) - relCount(day, day.keywords[a].keyword));
+}
+/* 언급 단어 트리맵의 숫자도 같은 방식: 표본 기사 제목에 그 단어가 들어간 기사 수 (후보 키워드면 동의어 포함, 출현 기사 값 사용) */
+function sampleWordCounts(day, words) {
+  const pool = day.analysis.sampleArts || [];
+  const norm = pool.map(x => String(x.t || '').replace(/\s/g, '').toUpperCase());
+  const cands = new Map((day.analysis.candidates || []).map(c => [c.kw.toUpperCase(), c]));
+  return words.map(w => {
+    const c = cands.get(w);
+    const als = (c && c.aliases && c.aliases.length ? c.aliases : [w]).map(a => String(a).replace(/\s/g, '').toUpperCase());
+    const idx = norm.map((s, i) => als.some(a => s.includes(a)) ? i : -1).filter(i => i >= 0);
+    return { label: w, df: c ? c.df : idx.length, arts: idx.map(i => ({ title: pool[i].t, url: pool[i].u || '', press: pool[i].p || '' })) };
+  });
+}
+
+/* "함께 많이 쓰인 표현" 한 줄 (주요 키워드·키워드별 뉴스 공통) */
+function coLine(kw, pool) {
+  const c = kwCo(kw, pool);
+  return `<div class="coline"><span class="lab">함께 많이 쓰인 표현</span> ${c.length ? c.map(x => `<b>${esc(x.label)}</b><span class="cnt">(${x.n}건)</span>`).join(', ') : '-'}</div>`;
 }
 /* 함께 많이 쓰인 표현: 키워드 기사 전수에서 함께 나온 기사 수가 많은 순 (최대 2개, 건수 포함) */
 function kwCo(kw, arts) {
@@ -563,6 +608,15 @@ function treemapHtml(items) {
   }).join('')}</div>`;
 }
 
+/* 단어 단위 이슈어: 단어가 나온 기사 수(같은 기사 안 중복은 1번) 상위 k개. 형용사·동사 형태 제외 */
+function wordTerms(arts, k, exclude, minDf) {
+  exclude = exclude || new Set(); minDf = minDf || 2;
+  const docs = new Map();
+  arts.forEach(a => new Set(tokens((a.title || '') + ' ' + (a.snippet || ''))).forEach(t => { if (!docs.has(t)) docs.set(t, []); docs.get(t).push(a); }));
+  return [...docs].filter(([w, list]) => list.length >= minDf && !exclude.has(w) && !isPredicate(w))
+    .sort((a, b) => b[1].length - a[1].length).slice(0, k).map(([w, list]) => ({ label: w, df: list.length, arts: list }));
+}
+
 function topTerms(arts, k, exclude) {
   const df = new Map();
   for (const a of arts) new Set(tokens(a.title + ' ' + (a.snippet || ''))).forEach(t => df.set(t, (df.get(t) || 0) + 1));
@@ -590,22 +644,37 @@ function summarizeDay(day) {
   const sig = marketSignals(signalPool([day]));
   const kwSet = new Set(day.keywords.map(k => k.keyword.toUpperCase()));
   const terms = topTerms(all, 14, kwSet);
-  const phr = phraseTerms(all, 14, kwSet, 2);   // 선별 기사의 키워드 조합
+  const phr = wordTerms(all, 14, new Set(), 2);   // 선별 기사의 이슈어 (단어 단위, 선정 키워드 포함)
   // 표본 기사 제목 전체가 저장된 날은 표본에서도 키워드 조합을 뽑음 (옛 기록은 단어 목록 사용)
   const pool = (day.analysis.sampleArts || []).map(x => ({ title: x.t, url: x.u || '', press: x.p || '' }));
-  const samplePhr = pool.length > 100 ? phraseTerms(pool, 24, new Set(['부동산', '아파트', '주택']), 3) : null;
+  const samplePhr = pool.length > 100   // 언급 단어 트리맵: 표본 기사 기준, 연관 보도(출현 기사)와 같은 방식으로 세어 순위 결정
+    ? (() => {
+        // 후보 = 표본 제목에 나온 모든 단어(2건 이상) + 후보 키워드 전체. 모두 같은 방식(포함 여부, 후보 키워드는 동의어 포함)으로 세어 상위 24개
+        const cands = (day.analysis.candidates || []).map(c => c.kw.toUpperCase());
+        const words = [...new Set([...wordTerms(pool, 9999, new Set(['부동산', '아파트', '주택']), 2).map(t => t.label), ...cands])];
+        const counted = sampleWordCounts(day, words).filter(t => t.df >= 3).sort((a, b) => b.df - a.df);
+        // 이미 고른 단어를 품은 합성어(예: 토허 → 토허신청)는 같은 이야기라 건너뜀. 후보 키워드는 예외(예: 주택공급)
+        const out = [];
+        for (const t of counted) {
+          if (out.length >= 24) break;
+          if (!cands.includes(t.label) && out.some(o => o.label !== t.label && t.label.includes(o.label))) continue;
+          out.push(t);
+        }
+        return out;
+      })()
+    : null;
   const perKw = day.keywords.map(kw => {
     const items = [];
     for (const a of kw.articles) for (const s of splitSentences(a)) items.push({ ...s, weight: (a.score || 1) * (s.isTitle ? 1.3 : 1) });
-    const cov = kw.articles.reduce((s, a) => s + (a.coverage || 1), 0);
+    const cov = relCount(day, kw.keyword);   // 연관 보도 (표본 출현 기사 수)
     return { kw, sents: textRank(items, 2), sig: marketSignals(kw.articles), terms: topTerms(kw.articles, 6, new Set([kw.keyword.toUpperCase()])), phr: phraseTerms(kw.articles, 6, new Set([kw.keyword.toUpperCase()]), 2), label: kwLabel(kw.keyword, kw.articles), pool: kwPool(day, kw), coverage: cov };
   });
   const press = new Set(all.map(a => a.press).filter(Boolean));
   const hottest = all.slice().sort((a, b) => (b.coverage - a.coverage) || (b.score - a.score))[0];
   const byCov = perKw.slice().sort((a, b) => b.coverage - a.coverage);
-  // 요약: 보도량 순 키워드 6개 + 시장 흐름
-  let narr = `${fmtDate(day.date)} 부동산 뉴스의 주요 키워드는 보도량 순으로 `
-    + byCov.map(p => `‘${p.label}’(${p.coverage}건)`).join(', ') + '입니다. ';
+  // 요약: 연관 보도 순 키워드 6개 + 시장 흐름
+  let narr = `${fmtDate(day.date)} 부동산 뉴스의 주요 키워드는 연관 보도 순으로 `
+    + byCov.map(p => `‘${p.kw.keyword}’(${p.coverage}건)`).join(', ') + '입니다. ';
   const clear = sig.filter(shownSig);
   narr += clear.length
     ? `기사 표현으로 본 시장 흐름은 ${clear.map(r => `${r.id} ${aspectLabel(r)}`).join(', ')}입니다.`
@@ -696,7 +765,7 @@ document.addEventListener('click', e => {
 });
 window.addEventListener('scroll', () => { if (!$('#tip').hidden && tipOwner) showTip(tipOwner); }, { passive: true });
 
-const state = { date: INDEX[0] && INDEX[0].date, tab: 'brief', kw: 0 };
+const state = { date: INDEX[0] && INDEX[0].date, tab: 'brief', kw: -1 };   // kw -1 = 연관 보도 1위 키워드
 try { state.tab = localStorage.getItem('re.tab') || 'brief'; } catch (e) {}
 
 async function render() {
@@ -712,13 +781,11 @@ async function render() {
   $('#dateSel').value = state.date;
   const meta = INDEX[i];
   $('#collected').textContent = meta ? `${fmtDate(meta.date)} · 수집 ${meta.collectedAt.slice(11, 16)}${i === 0 ? ' · 최신' : ' · 과거 기록'}` : '';
-  // 날짜 아래 통계 한 줄 (모든 탭 공통)
-  $('#daystats').textContent = '';
+  // 수집 시간 옆에 키워드 분석 표본 기사 수 (모든 탭 공통)
+  const stamp = $('#collected').textContent;
   loadDay(state.date).then(d => {
-    if (d.date !== state.date) return;
-    const all = d.keywords.flatMap(k => k.articles);
-    const press = new Set(all.map(a => a.press).filter(Boolean)).size;
-    $('#daystats').textContent = `선별 기사 ${all.length} · 참여 언론사 ${press} · 네이버 많이 본 뉴스 포함 ${all.filter(a => a.popular).length} · 키워드 분석 표본 기사 ${d.analysis.corpusSize}`;
+    if (d.date !== state.date || $('#collected').textContent !== stamp) return;
+    $('#collected').textContent = stamp + ` · 키워드 분석 표본 기사 ${d.analysis.corpusSize}건`;
   }).catch(() => {});
   if (state.tab === 'trend') return renderTrend(v);
   if (state.tab === 'search') return renderSearch(v);
@@ -736,14 +803,15 @@ function renderBrief(v, day) {
   const popular = S.all.filter(a => a.popular).length;
   const hot = S.all.slice().sort((a, b) => (b.coverage - a.coverage) || (b.score - a.score)).slice(0, 5);
   v.innerHTML = `
-  <div class="card"><h2>주요 키워드 <span class="sub">보도량 순 · 누르면 해당 키워드 기사 목록으로 이동</span></h2>
+  <div class="card"><h2>주요 키워드 <span class="sub">연관 보도 순 · 누르면 해당 키워드 기사 목록으로 이동</span></h2>
     <div class="kwtiles">${S.perKw.map((p, idx) => ({ p, idx })).sort((a, b) => b.p.coverage - a.p.coverage).map(({ p, idx }, rank) => `<a href="#" class="kwtile" data-kw="${idx}">
       <span class="lab">주요 키워드</span>
-      <div class="kwrow"><span class="bubble">“${esc(p.kw.keyword)}”</span><span class="cnt">(보도량 ${p.coverage}건)</span></div>
+      <div class="kwrow"><span class="bubble">“${esc(p.kw.keyword)}”</span><span class="cnt">(연관 보도 ${p.coverage}건)</span></div>
       <span class="lab">함께 많이 쓰인 표현</span>
-      <span class="coexp">${(c => c.length ? c.map(x => `${esc(x.label)}<span class="cnt">(${x.n}건)</span>`).join(', ') : '-')(kwCo(p.kw.keyword, p.pool))}</span></a>`).join('')}</div></div>
+      <span class="coexp">${(c => c.length ? c.map(x => `${esc(x.label)}<span class="cnt">(${x.n}건)</span>`).join(', ') : '-')(kwCo(p.kw.keyword, p.pool))}</span></a>`).join('')}</div>
+    ${selectionHowto(day)}</div>
   <div class="card">
-    <h2>오늘의 종합 요약 <span class="sub">탑재형 TextRank 요약 · 인터넷 AI 미사용</span>
+    <h2>오늘의 종합 요약
       <button class="btn" id="copyBrief" style="float:right;font-size:12.5px;padding:3px 8px">요약 복사</button></h2>
     <p class="narr">${esc(S.narr)}</p>
     <h2 style="margin-top:18px">시장 지표 <span class="sub">기사 표현 기준 · 산출 방식은 하단 설명 참고</span></h2>
@@ -755,20 +823,15 @@ function renderBrief(v, day) {
   <div class="card"><h2>가장 많이 보도된 이슈 TOP 5</h2>${hot.map((a, k) => articleHtml(a, k + 1)).join('')}</div>
   <div class="card"><h2>키워드별 뉴스 <span class="sub">제목을 누르면 해당 키워드 기사 목록으로 이동</span></h2>
   <div class="kwgrid">
-    ${S.perKw.map((p, idx) => `<div class="card kwcard">
-      <h3><a href="#" data-kw="${idx}">#${esc(p.label)}</a> <span class="src">보도량 ${p.coverage}건</span></h3>
-      ${p.sents.map(s => `<p>· ${esc(s.text)}</p>`).join('')}
-      <div class="chips" style="margin-top:8px">${p.phr.map(t => `<span class="chip tipword" ${tipAttr(t.label, t.arts, t.df)}>${esc(t.label)} ${t.df}</span>`).join('')}</div>
+    ${S.perKw.map((p, idx) => ({ p, idx })).sort((a, b) => b.p.coverage - a.p.coverage).map(({ p, idx }) => `<div class="card kwcard">
+      <h3><a href="#" data-kw="${idx}">“${esc(p.kw.keyword)}”</a> <span class="src">(연관 보도 ${p.coverage}건)</span></h3>
+      <ul class="kwarts">${p.kw.articles.slice(0, 4).map(a => `<li><a href="${safeUrl(a.url)}" target="_blank" rel="noopener">${esc(a.title)}</a> <span class="src">${esc(a.press || '')}</span></li>`).join('')}</ul>
     </div>`).join('')}
   </div></div>
-  <div class="card"><h2>오늘의 이슈어 <span class="sub">단어에 마우스를 올리면(휴대폰은 탭) 관련 기사 목록이 나타납니다</span></h2>
-    <div class="kwgrid">
-      <div class="card"><h3>선별 기사(${S.all.length}건) 이슈어 <span class="src">상자 면적 = 등장 기사 수</span></h3>
-        ${treemapHtml(S.phr.map(t => ({ word: t.label, v: t.df, tip: tipAttr(t.label, t.arts, t.df) })))}</div>
-      <div class="card"><h3>표본 전체(${day.analysis.corpusSize}건) 이슈어 <span class="src">상자 면적 = 등장 기사 수</span></h3>
+  <div class="card"><h2>언급 단어 트리맵 <span class="sub">키워드 분석 표본 기사 ${day.analysis.corpusSize}건 기준 · 상자 면적 = 등장 기사 수 · 단어에 마우스를 올리면(휴대폰은 탭) 관련 기사 목록</span></h2>
+    <div class="tmwide">
         ${treemapHtml(S.samplePhr ? S.samplePhr.map(t => ({ word: t.label, v: t.df, tip: tipAttr(t.label, t.arts, t.df) }))
           : (day.analysis.issueTerms || []).slice(0, 24).map(t => ({ word: t.term, v: t.df, tip: tipAttr(t.term, sampleArts(day, t.docs, () => matchArts(S.all, t.term)), t.df) })))}</div>
-    </div>
   </div>
   ${methodHtml(day)}`;
   fitTreemaps(v);
@@ -787,13 +850,16 @@ function methodHtml(day) {
   return `<details class="card method"><summary><b>용어 및 산출 근거</b> <span class="more">자세히 보기</span></summary>
   <dl>
     <dt>핵심 키워드 (${n}개)</dt>
-    <dd>“부동산·아파트·주택 시장·부동산 정책”으로 검색한 최근 24시간 기사 ${day.analysis.corpusSize}건을 표본으로 씁니다.
+    <dd>“부동산·아파트·주택 시장·부동산 정책·건설·건설사·건설업계·시공사”로 검색한 최근 24시간 기사 ${day.analysis.corpusSize}건을 표본으로 씁니다.
       후보 키워드 ${(day.analysis.candidates || []).length}개마다 점수를 매깁니다.<br>
       <b>점수 = 0.45 × 출현 + 0.35 × 연관 중심성 + 0.20 × 모멘텀</b> (각 항목은 최댓값 기준으로 0~1 환산)
       <ul><li><b>출현</b>: 키워드(동의어 포함)가 등장한 기사 수</li>
       <li><b>연관 중심성</b>: 키워드끼리 같은 기사에 함께 등장한 횟수로 연결망을 만들고 PageRank로 계산한, 다른 이슈와 얼마나 중심적으로 엮여 있는지의 값</li>
       <li><b>모멘텀</b>: 오늘 출현율 ÷ 최근 7일 평균 출현율 (최대 3배)</li></ul>
       점수 순으로 고르되 이미 고른 키워드와 기사가 50% 넘게 겹치면 건너뛰어 서로 다른 주제 ${n}개를 고릅니다. 세부 점수는 ‘키워드 연관도 분석’ 탭에 있습니다.</dd>
+
+    <dt>연관 보도</dt>
+    <dd>키워드 분석 표본 기사 중 그 키워드(동의어 포함, 예: 집값 = 집값·아파트값·매매가·주택가격)가 나온 기사 수입니다. 키워드 연관도 분석의 ‘출현 기사’와 같은 값이며, 주요 키워드·요약 문장·키워드별 뉴스의 순서도 이 숫자 순입니다. 언급 단어 트리맵의 숫자도 같은 방식(표본 기사 제목에 그 단어가 들어간 기사 수, 후보 키워드면 동의어 포함)으로 셉니다.</dd>
 
     <dt>화제도</dt>
     <dd>포털이 기사별 조회수를 공개하지 않아 대신 쓰는 인기 점수입니다. 같은 이슈를 다룬 기사를 제목 유사도로 하나로 묶은 뒤 계산합니다.<br>
@@ -826,24 +892,48 @@ function methodHtml(day) {
       <p class="note">※ 뉴스 표현을 집계한 지표이지 실제 시세 통계가 아닙니다. 근거 건수가 많을수록 신뢰도가 높습니다.
       ${window.IS_WEB ? '웹 공개판은 저작권 보호를 위해 기사 요약문 없이 제목만으로 판정합니다.' : ''}</p></dd>
 
-    <dt>핵심 문장 · 키워드별 요약</dt>
+    <dt>핵심 문장</dt>
     <dd>TextRank 방식의 추출 요약입니다. 문장끼리 겹치는 단어로 연결망을 만들어 PageRank로 중심 문장을 고릅니다. 이때 화제도가 높은 기사의 문장에 가중치를 주고, 비슷한 문장은 하나만 남기며, 키워드마다 최대 1문장씩 뽑습니다. 문장을 새로 만들지 않고 기사 속 문장을 그대로 가져옵니다.</dd>
 
-    <dt>오늘의 이슈어 (키워드 조합)</dt>
-    <dd>단어 하나로는 뜻이 잘 안 통해서 <b>키워드 조합</b>으로 보여줍니다. ① 제목에서 <b>나란히 붙어 나오는 2~3단어</b>가 여러 기사에 반복되고, 그 단어가 쓰인 기사 중 34% 이상에서 함께 나오면 하나의 표현으로 묶습니다(예: ‘집값 급락’, ‘나인원 한남’). ② 떨어져 있어도 <b>같은 기사에 함께 나오는 비율이 50% 이상</b>인 단어끼리는 ‘A·B’로 짝짓습니다(예: ‘국조실장·국민’, ‘관리비·월평균’). ③ 그 밖의 단어는 그대로 보여주고, 같은 이슈를 가리키는 조합이 겹치면 하나만 남깁니다. 상자 면적은 그 표현이 나온 기사 수이고, 형용사·동사 형태와 일반 단어(기자, 오늘 등)는 뺍니다. ‘선별 기사 이슈어’는 선별 기사 기준, ‘표본 전체 이슈어’는 키워드 분석 표본 전체 기준입니다.</dd>
+    <dt>함께 많이 쓰인 표현 (주요 키워드)</dt>
+    <dd>주요 키워드와 <b>같은 기사에 함께 자주 나온 표현</b>입니다.
+      <ul><li><b>대상</b>: 그 키워드의 선별 기사 10건 + 키워드 분석 표본 기사 중 그 키워드(동의어 포함)가 나온 기사 전부 (보통 20~40건)</li>
+      <li><b>표현 찾기</b>: 이 기사들의 제목에서 나란히 붙어 나오는 2~3단어 표현(예: ‘집값 급락’)과, 같은 기사에 함께 나오는 단어 짝(예: ‘LH·사장’)을 찾습니다.</li>
+      <li><b>정리</b>: 표현에서 키워드 자신과 그 일부(예: ‘부동산대책’의 ‘대책’)를 떼어내고, 일반 단어(서울, 공급, 거래, 가격 등)만 남는 표현은 버립니다. 단, <b>상승·하락·급락·위축처럼 방향을 나타내는 단어는 남깁니다.</b> 예: ‘집값 급락’ → ‘급락’</li>
+      <li><b>순위</b>: 키워드와 <b>함께 나온 기사 수가 많은 순서</b>로 2개를 보여주며, 괄호 안 숫자가 그 기사 수입니다.</li></ul></dd>
+
+    <dt>언급 단어 트리맵</dt>
+    <dd>키워드 분석 표본 기사에서 <b>많이 언급된 단어</b>를 트리맵(빈도에 비례하는 면적의 상자로 영역을 채우는 그래프)으로 보여줍니다. 상자 면적은 그 단어의 <b>연관 보도 수</b>입니다.
+      <ul><li><b>세는 방식</b>: 표본 기사 제목에 그 단어가 들어간 기사 수입니다(한 기사에 여러 번 나와도 1건). 후보 키워드는 동의어까지 포함하므로 주요 키워드의 연관 보도·키워드 연관도 분석의 출현 기사와 같은 숫자입니다.</li>
+      <li><b>후보와 순위</b>: 표본 제목에 나온 모든 단어와 후보 키워드 전체를 같은 방식으로 세어, 3건 이상인 단어 중 많은 순서로 24개를 보여줍니다. 주요 키워드도 특별 취급 없이 이 순위로 들어갑니다.</li>
+      <li><b>단어 정리</b>: 조사를 떼어내고(예: 집값이 → 집값), 형용사·동사 형태(예: 높여야, 새로운)와 일반 단어(기자, 오늘, 부동산, 아파트 등)는 뺍니다.</li></ul></dd>
   </dl></details>`;
 }
 
 function renderNews(v, day) {
-  if (state.kw >= day.keywords.length) state.kw = 0;
+  const order = kwOrder(day);
+  if (!(state.kw >= 0 && state.kw < day.keywords.length)) state.kw = order[0];
   const kw = day.keywords[state.kw];
-  v.innerHTML = `<div class="chips" style="margin-bottom:14px">${day.keywords.map((k, i) =>
-      `<span class="chip ${i === state.kw ? 'on' : ''}" data-i="${i}">#${esc(kwLabel(k.keyword, k.articles))} <small>${k.articles.length}</small></span>`).join('')}</div>
-    <div class="card"><h2>#${esc(kwLabel(kw.keyword, kw.articles))} <span class="sub">검색어 “${esc(kw.query)}” · 원문 ${kw.rawCount}건 → 이슈 묶음 후 화제도 상위 ${kw.articles.length}건</span></h2>
+  v.innerHTML = `<div class="chips" style="margin-bottom:14px">${order.map(i => [day.keywords[i], i]).map(([k, i]) =>
+      `<span class="chip ${i === state.kw ? 'on' : ''}" data-i="${i}">“${esc(k.keyword)}” <small>${relCount(day, k.keyword)}</small></span>`).join('')}</div>
+    <div class="card"><h2>“${esc(kw.keyword)}” <span class="sub">검색어 “${esc(kw.query)}” · 원문 ${kw.rawCount}건 → 이슈 묶음 후 화제도 상위 ${kw.articles.length}건</span></h2>
+    ${coLine(kw.keyword, kwPool(day, kw))}
     ${kw.articles.map((a, i) => articleHtml(a, i + 1)).join('') || '<p class="note">수집된 기사가 없습니다.</p>'}</div>
     <p class="note">※ 포털은 기사별 조회수를 공개하지 않아 <b>화제도</b>로 순위를 매깁니다: 같은 이슈를 보도한 언론사 수, 네이버/구글의 관련 기사 묶음 크기,
     양 포털 동시 노출, 검색 순위, 그리고 실제 조회수 기반인 <b>네이버 ‘많이 본 뉴스’ 랭킹</b> 포함 여부(가중치 가장 큼)를 합산합니다.</p>`;
   v.querySelectorAll('[data-i]').forEach(c => c.onclick = () => { state.kw = +c.dataset.i; render(); });
+}
+
+/* 키워드 선정 방식 (누르면 펼쳐지는 설명) - 키워드 연관도 분석 탭과 종합 브리핑 주요 키워드 아래에 공통으로 사용 */
+function selectionHowto(day) {
+  const nc = (day.analysis.candidates || []).length;
+  return `<details class="howto"><summary>키워드 선정 방식 보기</summary><p class="note">
+    ① “부동산·아파트·주택 시장·부동산 정책·건설·건설사·건설업계·시공사”로 검색한 최근 24시간 기사(구글+네이버)와 네이버 많이 본 뉴스 중 부동산 기사를 모아 <b>키워드 분석 표본 기사 ${day.analysis.corpusSize}건</b>을 만듭니다.<br>
+    ② 후보 키워드 ${nc}개(동의어 포함, 설정 파일에서 편집 가능)가 각 표본 기사에 등장하는지 확인해 <b>출현 기사 수</b>를 셉니다.<br>
+    ③ 같은 기사에 함께 등장한 횟수로 <b>공출현 네트워크</b>를 만들고 가중 PageRank로 <b>연관 중심성</b>을 계산합니다.<br>
+    ④ 최근 7일 평균 대비 오늘 출현 비율로 <b>모멘텀</b>을 구합니다. 점수 = 0.45×출현 + 0.35×중심성 + 0.20×모멘텀.<br>
+    ⑤ 점수 순으로 고르되, 이미 고른 키워드와 기사 집합이 50% 넘게 겹치면 제외해 <b>서로 다른 주제 ${day.keywords.length}개</b>를 확보합니다.<br>
+    ⑥ 선정된 키워드마다 다시 검색해 같은 이슈를 묶고, 화제도 상위 10건을 <b>키워드별 뉴스</b>로 보여줍니다.</p></details>`;
 }
 
 function renderAnalysis(v, day) {
@@ -852,14 +942,8 @@ function renderAnalysis(v, day) {
   // 키워드에 마우스를 올리면 표본 기사 중 그 키워드가 나온 기사 목록 (옛 기록은 선별 기사에서 찾음)
   const dayArts = day.keywords.flatMap(k => k.articles.map(a => ({ ...a, keyword: k.keyword })));
   const candTip = c => tipAttr(c.kw, sampleArts(day, c.docs, () => dayArts.filter(a => a.keyword === c.kw).concat(matchArts(dayArts.filter(a => a.keyword !== c.kw), c.kw))), c.docs && c.docs.length ? c.df : 0);
-  v.innerHTML = `<div class="card"><h2>키워드 선정 방식</h2><p class="note">
-    ① “부동산·아파트·주택 시장·부동산 정책” 기사 ${day.analysis.corpusSize}건(구글+네이버, 최근 24시간)과 네이버 많이 본 뉴스 중 부동산 기사를 표본으로 수집합니다.<br>
-    ② 후보 키워드 ${C.length}개(설정 파일에서 편집 가능)가 각 기사에 등장하는지 확인해 <b>출현 기사 수</b>를 셉니다.<br>
-    ③ 같은 기사에 함께 등장한 횟수로 <b>공출현 네트워크</b>를 만들고 가중 PageRank로 <b>연관 중심성</b>을 계산합니다.<br>
-    ④ 최근 7일 평균 대비 오늘 출현 비율로 <b>모멘텀</b>을 구합니다. 점수 = 0.45×출현 + 0.35×중심성 + 0.20×모멘텀.<br>
-    ⑤ 점수 순으로 고르되, 이미 고른 키워드와 기사 집합이 50% 넘게 겹치면 제외해 <b>서로 다른 주제 ${day.keywords.length}개</b>를 확보합니다.</p></div>
-  <div class="card"><h2>공출현 네트워크 <span class="sub">상위 14개 후보 · 선 굵기 = 함께 등장한 기사 수</span></h2>${networkSvg(C.slice(0, 14), day.analysis.edges || [], candTip)}</div>
-  <p class="note" style="margin:-8px 0 14px">키워드(원·이름)에 마우스를 올리면(휴대폰은 탭) 관련 기사 목록이 나타납니다.</p>
+  v.innerHTML = `<div class="card"><h2>공출현 네트워크 <span class="sub">상위 14개 후보 · 선 굵기 = 함께 등장한 기사 수 · 키워드에 마우스를 올리면(휴대폰은 탭) 관련 기사 목록</span></h2>${networkSvg(C.slice(0, 14), day.analysis.edges || [], candTip)}
+    ${selectionHowto(day)}</div>
   <div class="card scroll"><h2>후보 키워드 점수표</h2><table>
     <tr><th>키워드</th><th></th><th>점수</th><th class="num">출현 기사</th><th class="num">출현율</th><th class="num">중심성</th><th class="num">모멘텀</th></tr>
     ${C.map(c => `<tr><td class="${c.selected ? 'sel' : ''}"><span class="tipword" ${candTip(c)}>${c.selected ? '✔ ' : ''}${esc(c.kw)}</span></td>
@@ -893,7 +977,9 @@ async function renderTrend(v) {
   }
   const recent = days.slice(-30);
   // 지표별 일자 시계열 (근거가 있는 날만 점으로 표시)
-  const perDay = recent.map(d => ({ date: d.date, rows: marketSignals(signalPool([d])) }));
+  // 추이의 시장 지표는 키워드 분석 표본 기사 전체 기준 (표본 제목이 없는 옛 기록은 선별 기사로 대체)
+  const samplePool = d => (d.analysis && d.analysis.sampleArts && d.analysis.sampleArts.length) ? d.analysis.sampleArts.map(x => ({ title: x.t, url: x.u || '', press: x.p || '', coverage: 1 })) : d.keywords.flatMap(k => k.articles);
+  const perDay = recent.map(d => ({ date: d.date, rows: marketSignals(samplePool(d)) }));
   const series = ASPECTS.map((a, ai) => ({ a, points: perDay.map(d => ({ date: d.date, v: d.rows[ai].v, n: d.rows[ai].n })) }))
     .filter(s => s.points.some(shownSig));
   // 키워드별 출현율 히트맵: 기간 내 선정된 적 있는 키워드
@@ -909,15 +995,16 @@ async function renderTrend(v) {
   }).sort((a, b) => b[3] - a[3]).slice(0, 15);
 
   v.innerHTML = `
-  <div class="card"><h2>시장 지표 추이 <span class="sub">최근 ${recent.length}일 · 선별 + 표본 기사 전체의 표현 기준 · 근거 3건 미만인 날은 빈칸</span></h2>
+  <div class="card"><h2>시장 전망 추이 <span class="sub">최근 ${recent.length}일 · 키워드 분석 표본 기사 전체의 표현 기준 · 근거 3건 미만인 날은 빈칸</span></h2>
     <div class="grid2">${series.map(s => `<div><p class="evh">${esc(s.a.id)} <span class="src">위 ${s.a.pos} · 아래 ${s.a.neg}</span></p>${lineSvg(s.points, s.a.pos, s.a.neg)}</div>`).join('') || '<p class="note">판단 근거가 있는 날이 없습니다.</p>'}</div></div>
-  <div class="card scroll"><h2>선정 키워드 출현율 추이 <span class="sub">진할수록 많이 보도 · ● = 그날 선정</span></h2>
+  <div class="card scroll"><h2>선정 키워드 출현율 추이 <span class="sub">키워드 분석 표본 기사 전체 중 그 키워드가 나온 비율 · 진할수록 많이 보도 · ● = 그날 선정</span></h2>
     <table class="hm"><tr><th></th>${recent.map(d => `<th style="text-align:center">${+d.date.slice(5, 7)}/${+d.date.slice(8)}</th>`).join('')}</tr>
     ${kws.map(k => `<tr><th>${esc(k)}</th>${recent.map(d => { const c = d.analysis.candidates.find(x => x.kw === k); const f = c ? c.freq : 0;
       return `<td title="${esc(k)} ${d.date}: ${(f * 100).toFixed(1)}%" style="background:rgba(36,87,214,${(0.08 + 0.8 * f / maxF).toFixed(2)})">${c && c.selected ? '●' : ''}</td>`; }).join('')}</tr>`).join('')}
     </table></div>
   <div class="card"><h2>급상승 이슈어 <span class="sub">최근 3일 vs 그 이전 출현율 · 선별 + 표본 기사 전체 기준</span></h2>
-    <table><tr><th>단어</th><th class="num">최근 3일</th><th class="num">이전</th><th class="num">배율</th></tr>
+    <table class="gridtbl"><colgroup><col><col style="width:22%"><col style="width:22%"><col style="width:18%"></colgroup>
+    <tr><th>단어</th><th class="num">최근 3일</th><th class="num">이전</th><th class="num">배율</th></tr>
     ${rising.map(r => `<tr><td>${esc(r[0])}</td><td class="num">${(r[1] * 100).toFixed(1)}%</td><td class="num">${(r[2] * 100).toFixed(1)}%</td><td class="num">${r[3].toFixed(1)}×</td></tr>`).join('')}</table></div>`;
 }
 
@@ -931,9 +1018,11 @@ function lineSvg(points, posLabel, negLabel) {
   const step = Math.ceil(points.length / 6);
   const gl = { 1: posLabel || '+1', 0: '0', [-1]: negLabel || '-1' };
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">
+    <rect x="${L}" y="${y(1)}" width="${W - L - R}" height="${y(0) - y(1)}" fill="var(--up)" fill-opacity=".07"/>
+    <rect x="${L}" y="${y(0)}" width="${W - L - R}" height="${y(-1) - y(0)}" fill="var(--down)" fill-opacity=".07"/>
     ${[-1, 0, 1].map(g => `<line x1="${L}" x2="${W - R}" y1="${y(g)}" y2="${y(g)}" stroke="var(--line)"/><text x="${L - 6}" y="${y(g) + 4}" text-anchor="end">${gl[g]}</text>`).join('')}
     <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2"/>
-    ${points.map((p, i) => has(p) ? `<circle cx="${x(i)}" cy="${y(p.v)}" r="3.5" fill="${p.v >= 0 ? 'var(--up)' : 'var(--down)'}"><title>${p.date}: ${p.v.toFixed(2)}${p.n != null ? ' · 근거 ' + p.n + '건' : ''}</title></circle>` : '').join('')}
+    ${points.map((p, i) => has(p) ? `<circle cx="${x(i)}" cy="${y(p.v)}" r="4" fill="var(--panel)" stroke="${p.v >= 0 ? 'var(--up)' : 'var(--down)'}" stroke-width="2"><title>${p.date}: ${p.v.toFixed(2)}${p.n != null ? ' · 근거 ' + p.n + '건' : ''}</title></circle>` : '').join('')}
     ${points.map((p, i) => i % step === 0 || i === points.length - 1 ? `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${+p.date.slice(5, 7)}/${+p.date.slice(8)}</text>` : '').join('')}
   </svg>`;
 }
@@ -977,16 +1066,15 @@ function periodRows(q, days) {
     rows.push({ label: def.label, target: ymd(t), from: used.length ? used[0].date : '', to: used.length ? used[used.length - 1].date : '', nDays: used.length, arts, pool: signalPool(used).filter(match) });
   }
   const qTok = new Set(tokens(q || ''));
-  const generic = new Set(['부동산', '아파트', '주택', '시장', '서울', '정부', '전국']);
   for (const r of rows) {
-    r.terms = topTerms(r.arts, 8, new Set([...qTok, ...generic]));
+    r.terms = wordTerms(r.arts, 8, qTok, 2).map(t => [t.label, t.df]);   // 언급 단어와 같은 단어 정리 규칙 (검색어만 제외)
     r.sig = marketSignals(r.pool || r.arts).filter(shownSig);
     r.key = textRank(r.arts.filter(a => !/(\.\.\.|…)\s*$/.test(a.title || '')).map(a => ({ text: a.title, art: a, weight: Math.log(2 + (a.coverage || 1)) })), 3);
   }
   // 시기별로 두드러진 단어 표시: 과거 시기는 '오늘 핵심어에 없는 단어', 오늘은 '과거 어느 시기에도 없던 단어'
   const set = r => new Set(r.terms.map(t => t[0]));
-  const todaySet = new Set(topTerms(rows[0].arts, 20, qTok).map(t => t[0]));
-  const pastSet = new Set(rows.slice(1).flatMap(r => topTerms(r.arts, 20, qTok).map(t => t[0])));
+  const todaySet = new Set(wordTerms(rows[0].arts, 20, qTok, 2).map(t => t.label));
+  const pastSet = new Set(rows.slice(1).flatMap(r => wordTerms(r.arts, 20, qTok, 2).map(t => t.label)));
   for (const r of rows) r.uniq = new Set([...set(r)].filter(t => r.label === '오늘' ? !pastSet.has(t) : !todaySet.has(t)));
   return rows;
 }function periodNarrative(q, rows) {
@@ -998,23 +1086,12 @@ function periodRows(q, days) {
 function periodHtml(q, rows, days) {
   const chip = (t, r) => `<span class="chip static${r.uniq.has(t[0]) ? ' uniq' : ''}">${esc(t[0])}</span>`;
   const sigTxt = r => r.sig.length ? r.sig.map(s => `<span class="${s.v > 0.15 ? 'pos' : s.v < -0.15 ? 'neg' : ''}">${esc(s.id)} ${aspectLabel(s)}</span>`).join('<br>') : '<span class="note">근거 부족</span>';
-  return `<div class="card"><h2>시기별 비교 <span class="sub">${q ? `“${esc(q)}”` : '부동산 전반'} · 기준일 ${esc(rows[0].target)}</span></h2>
-    ${periodNarrative(q, rows) ? `<p class="narr">${esc(periodNarrative(q, rows))}</p>` : ''}
-    <div class="scroll"><table class="ptable"><tr><th>시기</th><th>기간</th><th class="num">관련 기사</th><th>핵심어 <span class="note">(굵게 = 그 시기에 두드러진 단어)</span></th><th>시장 지표</th></tr>
-    ${rows.map(r => !r.nDays
-      ? `<tr><td><b>${esc(r.label)}</b></td><td class="note">${esc(r.target)} 전후</td><td colspan="3" class="note">아직 기록 없음 — 수집 기록이 쌓이면 자동으로 채워집니다</td></tr>`
-      : `<tr><td><b>${esc(r.label)}</b></td><td class="note">${r.from === r.to ? esc(r.from) : `${esc(r.from)}<br>~${esc(r.to)} (${r.nDays}일)`}</td>
-      <td class="num">${r.arts.length}</td><td style="white-space:normal"><div class="chips">${r.terms.map(t => chip(t, r)).join('') || '<span class="note">-</span>'}</div></td>
-      <td style="white-space:normal;font-size:12.5px">${sigTxt(r)}</td></tr>`).join('')}
-    </table></div>
-    <h2 style="margin-top:18px">시기별 대표 기사</h2>
+  return `<div class="card"><h2>시기별 대표 기사 <span class="sub">${q ? `“${esc(q)}”` : '부동산 전반'} · 기준일 ${esc(rows[0].target)}</span></h2>
     ${rows.filter(r => r.nDays).map(r => `<details class="others pd"><summary><b>${esc(r.label)}</b> · ${r.arts.length}건${r.key[0] ? ` — ${esc(r.key[0].text)}` : ''}</summary>
       ${r.key.length ? `<ol class="keysent">${r.key.map(s => `<li><a href="${safeUrl(s.art.url)}" target="_blank" rel="noopener">${esc(s.text)}</a> <span class="src">${esc(s.art.press || '')} ${esc(s.art.date || '')}</span></li>`).join('')}</ol>` : '<p class="note">관련 기사가 없습니다.</p>'}
       ${r.arts.length > 3 ? `<ul>${r.arts.filter(a => !r.key.some(k => k.art === a)).slice(0, 7).map(a => `<li><a href="${safeUrl(a.url)}" target="_blank" rel="noopener">${esc(a.title)}</a> <span class="src">${esc(a.press || '')}</span></li>`).join('')}</ul>` : ''}
     </details>`).join('')}
-    <p class="note">※ 매일 쌓인 수집 기록(하루 약 60건)으로 비교합니다. 현재 기록은 ${days.length}일치(${esc(days[0].date)} ~ ${esc(days[days.length - 1].date)})이며,
-      각 시기는 기준일에서 거슬러 올라간 날짜 전후(1주 전 ±1일, 1개월 전 ±3일, 3개월 전 ±7일, 6개월 전 ±10일, 1년 전 ±15일, 3·6년 전 ±30일)의 기록을 모아 씁니다.
-      시장 지표는 근거 기사 3건 이상일 때만 표시합니다.</p></div>`;
+    </div>`;
 }
 
 async function renderSearch(v) {
@@ -1120,7 +1197,7 @@ async function renderPolicy(v) {
 
 /* ================================================================ 이벤트 */
 function setTab(t) { state.tab = t; try { localStorage.setItem('re.tab', t); } catch (e) {} render(); }
-function setDate(d) { state.date = d; state.kw = 0; render(); window.scrollTo(0, 0); }
+function setDate(d) { state.date = d; state.kw = -1; render(); window.scrollTo(0, 0); }
 $('#dateSel').innerHTML = INDEX.map(x => `<option value="${x.date}">${x.date} (${'일월화수목금토'[new Date(x.date + 'T00:00:00').getDay()]})</option>`).join('');
 $('#dateSel').onchange = e => setDate(e.target.value);
 $('#prev').onclick = () => { const i = INDEX.findIndex(x => x.date === state.date); if (i < INDEX.length - 1) setDate(INDEX[i + 1].date); };

@@ -322,7 +322,7 @@ function Select-Keywords($docs, $history) {
         for ($i = 0; $i -lt $N; $i++) {
             foreach ($al in $aliases) { if ($docKeys[$i].Contains($al)) { [void]$set.Add($i); break } }
         }
-        $cands += [pscustomobject]@{ kw = $c.kw; query = $c.query; docs = $set; df = $set.Count; pr = 0.0; momentum = 1.0; score = 0.0 }
+        $cands += [pscustomobject]@{ kw = $c.kw; query = $c.query; aliases = @($c.aliases); docs = $set; df = $set.Count; pr = 0.0; momentum = 1.0; score = 0.0 }
     }
 
     # 공출현(co-occurrence) 네트워크 + 가중 PageRank = 연관 중심성
@@ -392,7 +392,7 @@ function Select-Keywords($docs, $history) {
         table    = @($cands | Sort-Object score -Descending | ForEach-Object {
             [ordered]@{ kw = $_.kw; df = $_.df; freq = $freqMap[$_.kw]; centrality = [Math]::Round($_.pr, 4)
                         momentum = [Math]::Round($_.momentum, 2); score = [Math]::Round($_.score, 3)
-                        selected = $false; docs = @($_.docs | Select-Object -First 8) } })
+                        selected = $false; docs = @($_.docs | Select-Object -First 8); aliases = @($_.aliases) } })
         edges    = $edges
     }
 }
