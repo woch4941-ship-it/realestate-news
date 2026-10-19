@@ -2,7 +2,8 @@ name: daily-news
 
 on:
   schedule:
-    - cron: '30 22 * * *'   # 한국시간 매일 07:30
+    - cron: '0 1 * * *'     # UTC 01:00 = KST 08:30 (아침)
+    - cron: '0 9 * * *'     # UTC 09:00 = KST 18:00 (저녁)
   workflow_dispatch:
 
 permissions:
