@@ -331,10 +331,14 @@ function Select-Keywords($docs, $history) {
     foreach ($c in $Config.candidates) {
         $set = New-Object 'System.Collections.Generic.HashSet[int]'
         $aliases = @($c.aliases | ForEach-Object { ($_ -replace '\s', '').ToUpper() })
+        # exclude: 이 말 안에 든 동의어는 세지 않음 (예: 상업용부동산의 '오피스'가 '오피스텔'에 걸리지 않게)
+        $excl = @($c.exclude | Where-Object { $_ } | ForEach-Object { ($_ -replace '\s', '').ToUpper() })
         for ($i = 0; $i -lt $N; $i++) {
-            foreach ($al in $aliases) { if ($docKeys[$i].Contains($al)) { [void]$set.Add($i); break } }
+            $key = $docKeys[$i]
+            foreach ($ex in $excl) { $key = $key.Replace($ex, ' ') }
+            foreach ($al in $aliases) { if ($key.Contains($al)) { [void]$set.Add($i); break } }
         }
-        $cands += [pscustomobject]@{ kw = $c.kw; query = $c.query; aliases = @($c.aliases); docs = $set; df = $set.Count; pr = 0.0; momentum = 1.0; score = 0.0 }
+        $cands += [pscustomobject]@{ kw = $c.kw; query = $c.query; queries = @($c.queries | Where-Object { $_ }); aliases = @($c.aliases); exclude = $excl; docs = $set; df = $set.Count; pr = 0.0; momentum = 1.0; score = 0.0 }
     }
 
     # 공출현(co-occurrence) 네트워크 + 가중 PageRank = 연관 중심성
@@ -404,7 +408,7 @@ function Select-Keywords($docs, $history) {
         table    = @($cands | Sort-Object score -Descending | ForEach-Object {
             [ordered]@{ kw = $_.kw; df = $_.df; freq = $freqMap[$_.kw]; centrality = [Math]::Round($_.pr, 4)
                         momentum = [Math]::Round($_.momentum, 2); score = [Math]::Round($_.score, 3)
-                        selected = $false; docs = @($_.docs | Select-Object -First 8); aliases = @($_.aliases) } })
+                        selected = $false; docs = @($_.docs | Select-Object -First 8); aliases = @($_.aliases); exclude = @($_.exclude) } })
         edges    = $edges
     }
 }
@@ -601,8 +605,13 @@ for ($i = 0; $i -lt $corpusMeta.Count; $i++) {
 $usedTitles = New-Object 'System.Collections.Generic.HashSet[string]'
 $keywordsOut = @()
 foreach ($c in $analysis.selected) {
-    Log "키워드 '$($c.kw)' 수집 (검색어: $($c.query))"
-    $arts = @(Search-Naver $c.query) + @(Search-Google $c.query)
+    # 묶은 키워드(예: 재건축·재개발)는 각 단어로 따로 검색해 합침 (두 단어를 함께 검색하면 둘 다 나온 기사만 잡힘)
+    # queries 가 있으면 그 검색어들을 각각 검색해 합침 (예: 거래량 → 아파트 거래량 + 수익형 부동산 거래량)
+    $qs = if (@($c.queries | Where-Object { $_ }).Count) { @($c.queries | Where-Object { $_ }) }
+          elseif ($c.kw -match '·') { @($c.kw -split '·' | Where-Object { $_ }) } else { @($c.query) }
+    $arts = @()
+    Log "키워드 '$($c.kw)' 수집 (검색어: $($qs -join ', '))"
+    foreach ($q in $qs) { $arts += @(Search-Naver $q) + @(Search-Google $q) }
     Log "  원문 $($arts.Count)건"
     $stories = Group-Stories $arts $popular.ids
     $top = @()
@@ -615,7 +624,7 @@ foreach ($c in $analysis.selected) {
     Log "  이슈 묶음 $($stories.Count)개 -> 상위 $($top.Count)개 선정"
     $row = $analysis.table | Where-Object { $_.kw -eq $c.kw } | Select-Object -First 1
     $keywordsOut += [ordered]@{
-        keyword = $c.kw; query = $c.query; score = $row.score; df = $row.df; momentum = $row.momentum
+        keyword = $c.kw; query = ($qs -join ", "); score = $row.score; df = $row.df; momentum = $row.momentum
         rawCount = $arts.Count; articles = $top
         # 표본 기사 중 이 키워드(동의어 포함)가 나온 기사 전체의 번호 (analysis.sampleArts 기준) - 함께 많이 쓰인 표현 분석용
         sampleDocs = @($c.docs | Sort-Object)

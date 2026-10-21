@@ -389,7 +389,8 @@ function sampleWordCounts(day, words) {
   return words.map(w => {
     const c = cands.get(w);
     const als = (c && c.aliases && c.aliases.length ? c.aliases : [w]).map(a => String(a).replace(/\s/g, '').toUpperCase());
-    const idx = norm.map((s, i) => als.some(a => s.includes(a)) ? i : -1).filter(i => i >= 0);
+    const ex = ((c && c.exclude) || []).map(a => String(a).replace(/\s/g, '').toUpperCase());   // 예: 오피스텔 속 '오피스'는 세지 않음
+    const idx = norm.map((s, i) => { ex.forEach(e => { s = s.split(e).join(' '); }); return als.some(a => s.includes(a)) ? i : -1; }).filter(i => i >= 0);
     return { label: w, df: c ? c.df : idx.length, arts: idx.map(i => ({ title: pool[i].t, url: pool[i].u || '', press: pool[i].p || '' })) };
   });
 }
@@ -406,7 +407,7 @@ function kwAliases(day, kw) {
   return (c && c.aliases) || [];
 }
 function kwCo(kw, arts, aliases) {
-  // 키워드 자신과 그 동의어(예: 서울시정책의 오세훈)는 함께 쓰인 표현에서 제외
+  // 키워드 자신과 그 동의어(예: 규제지역의 토허)는 함께 쓰인 표현에서 제외
   const own = new Set(tokenSegments([kw, ...(aliases || [])].join(' . ')).flat().filter(Boolean).concat([kw.toUpperCase()], (aliases || []).map(a => String(a).replace(/\s/g, '').toUpperCase())));
   const out = [], seen = new Set();
   for (const t of phraseTerms(arts, 30, new Set(), 2)) {
