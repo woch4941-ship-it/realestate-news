@@ -1,0 +1,110 @@
+﻿[00:37:54] ===== 수집 시작: 2026-10-27  =====
+[00:37:54] 네이버 많이 본 뉴스 랭킹 수집
+[00:37:56]   랭킹 기사 407건
+[00:37:56] 기초 말뭉치 수집 (연관도 분석용)
+[00:38:04]   요청 실패(1/3): https://news.google.com/rss/search?q=%EB%B6%80%EB%8F%99%EC%82%B0%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:38:12]   요청 실패(2/3): https://news.google.com/rss/search?q=%EB%B6%80%EB%8F%99%EC%82%B0%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:38:26]   요청 실패(3/3): https://news.google.com/rss/search?q=%EB%B6%80%EB%8F%99%EC%82%B0%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:38:37]   '부동산' -> 누적 16건
+[00:38:45]   요청 실패(1/3): https://news.google.com/rss/search?q=%EC%95%84%ED%8C%8C%ED%8A%B8%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:38:56]   요청 실패(2/3): https://news.google.com/rss/search?q=%EC%95%84%ED%8C%8C%ED%8A%B8%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:39:08]   요청 실패(3/3): https://news.google.com/rss/search?q=%EC%95%84%ED%8C%8C%ED%8A%B8%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:39:18]   '아파트' -> 누적 47건
+[00:39:25]   요청 실패(1/3): https://news.google.com/rss/search?q=%EC%A3%BC%ED%83%9D%20%EC%8B%9C%EC%9E%A5%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:39:34]   요청 실패(2/3): https://news.google.com/rss/search?q=%EC%A3%BC%ED%83%9D%20%EC%8B%9C%EC%9E%A5%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:39:48]   요청 실패(3/3): https://news.google.com/rss/search?q=%EC%A3%BC%ED%83%9D%20%EC%8B%9C%EC%9E%A5%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:39:57]   '주택 시장' -> 누적 67건
+[00:40:03]   요청 실패(1/3): https://news.google.com/rss/search?q=%EB%B6%80%EB%8F%99%EC%82%B0%20%EC%A0%95%EC%B1%85%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:40:10]   요청 실패(2/3): https://news.google.com/rss/search?q=%EB%B6%80%EB%8F%99%EC%82%B0%20%EC%A0%95%EC%B1%85%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:40:20]   요청 실패(3/3): https://news.google.com/rss/search?q=%EB%B6%80%EB%8F%99%EC%82%B0%20%EC%A0%95%EC%B1%85%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:40:30]   '부동산 정책' -> 누적 78건
+[00:40:38]   요청 실패(1/3): https://news.google.com/rss/search?q=%EC%A3%BC%ED%83%9D%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:40:47]   요청 실패(2/3): https://news.google.com/rss/search?q=%EC%A3%BC%ED%83%9D%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:40:58]   요청 실패(3/3): https://news.google.com/rss/search?q=%EC%A3%BC%ED%83%9D%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:41:07]   '주택' -> 누적 100건
+[00:41:15]   요청 실패(1/3): https://news.google.com/rss/search?q=%EC%83%81%EC%97%85%EC%9A%A9%20%EB%B6%80%EB%8F%99%EC%82%B0%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:41:25]   요청 실패(2/3): https://news.google.com/rss/search?q=%EC%83%81%EC%97%85%EC%9A%A9%20%EB%B6%80%EB%8F%99%EC%82%B0%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:41:38]   요청 실패(3/3): https://news.google.com/rss/search?q=%EC%83%81%EC%97%85%EC%9A%A9%20%EB%B6%80%EB%8F%99%EC%82%B0%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:41:47]   '상업용 부동산' -> 누적 109건
+[00:41:56]   요청 실패(1/3): https://news.google.com/rss/search?q=%EB%B6%80%EB%8F%99%EC%82%B0%20%EA%B8%88%EC%9C%B5%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:42:06]   요청 실패(2/3): https://news.google.com/rss/search?q=%EB%B6%80%EB%8F%99%EC%82%B0%20%EA%B8%88%EC%9C%B5%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:42:19]   요청 실패(3/3): https://news.google.com/rss/search?q=%EB%B6%80%EB%8F%99%EC%82%B0%20%EA%B8%88%EC%9C%B5%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:42:28]   '부동산 금융' -> 누적 124건
+[00:42:36]   요청 실패(1/3): https://news.google.com/rss/search?q=%EC%A7%91%EA%B0%92%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:42:46]   요청 실패(2/3): https://news.google.com/rss/search?q=%EC%A7%91%EA%B0%92%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:42:59]   요청 실패(3/3): https://news.google.com/rss/search?q=%EC%A7%91%EA%B0%92%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:43:08]   '집값' -> 누적 147건
+[00:43:17]   요청 실패(1/3): https://news.google.com/rss/search?q=%EB%B6%80%EB%8F%99%EC%82%B0%20%EA%B0%9C%EB%B0%9C%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:43:28]   요청 실패(2/3): https://news.google.com/rss/search?q=%EB%B6%80%EB%8F%99%EC%82%B0%20%EA%B0%9C%EB%B0%9C%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:43:38]   요청 실패(3/3): https://news.google.com/rss/search?q=%EB%B6%80%EB%8F%99%EC%82%B0%20%EA%B0%9C%EB%B0%9C%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:43:47]   '부동산 개발' -> 누적 162건
+[00:43:47] 선정 키워드: 집값, 전월세, 수익형부동산, 공공주택, 부동산정책, 재건축·재개발, 미분양, 청약·분양, 다주택자
+[00:43:47] 키워드 '집값' 수집 (검색어: 집값)
+[00:43:56]   요청 실패(1/3): https://news.google.com/rss/search?q=%EC%A7%91%EA%B0%92%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:44:07]   요청 실패(2/3): https://news.google.com/rss/search?q=%EC%A7%91%EA%B0%92%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:44:18]   요청 실패(3/3): https://news.google.com/rss/search?q=%EC%A7%91%EA%B0%92%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:44:24]   원문 64건
+[00:44:24]   이슈 묶음 9개 -> 상위 9개 선정
+[00:44:24] 키워드 '전월세' 수집 (검색어: 전월세)
+[00:44:37]   요청 실패(1/3): https://news.google.com/rss/search?q=%EC%A0%84%EC%9B%94%EC%84%B8%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:44:49]   요청 실패(2/3): https://news.google.com/rss/search?q=%EC%A0%84%EC%9B%94%EC%84%B8%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:45:00]   요청 실패(3/3): https://news.google.com/rss/search?q=%EC%A0%84%EC%9B%94%EC%84%B8%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:45:06]   원문 64건
+[00:45:06]   이슈 묶음 10개 -> 상위 10개 선정
+[00:45:06] 키워드 '수익형부동산' 수집 (검색어: 상업용 부동산, 수익형 부동산, 오피스텔)
+[00:45:15]   요청 실패(1/3): https://news.google.com/rss/search?q=%EC%83%81%EC%97%85%EC%9A%A9%20%EB%B6%80%EB%8F%99%EC%82%B0%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:45:26]   요청 실패(2/3): https://news.google.com/rss/search?q=%EC%83%81%EC%97%85%EC%9A%A9%20%EB%B6%80%EB%8F%99%EC%82%B0%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:45:36]   요청 실패(3/3): https://news.google.com/rss/search?q=%EC%83%81%EC%97%85%EC%9A%A9%20%EB%B6%80%EB%8F%99%EC%82%B0%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:45:53]   요청 실패(1/3): https://news.google.com/rss/search?q=%EC%88%98%EC%9D%B5%ED%98%95%20%EB%B6%80%EB%8F%99%EC%82%B0%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:46:01]   요청 실패(2/3): https://news.google.com/rss/search?q=%EC%88%98%EC%9D%B5%ED%98%95%20%EB%B6%80%EB%8F%99%EC%82%B0%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:46:12]   요청 실패(3/3): https://news.google.com/rss/search?q=%EC%88%98%EC%9D%B5%ED%98%95%20%EB%B6%80%EB%8F%99%EC%82%B0%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:46:29]   요청 실패(1/3): https://news.google.com/rss/search?q=%EC%98%A4%ED%94%BC%EC%8A%A4%ED%85%94%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:46:40]   요청 실패(2/3): https://news.google.com/rss/search?q=%EC%98%A4%ED%94%BC%EC%8A%A4%ED%85%94%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:46:54]   요청 실패(3/3): https://news.google.com/rss/search?q=%EC%98%A4%ED%94%BC%EC%8A%A4%ED%85%94%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:47:00]   원문 72건
+[00:47:00]   이슈 묶음 23개 -> 상위 10개 선정
+[00:47:00] 키워드 '공공주택' 수집 (검색어: 공공주택)
+[00:47:11]   요청 실패(1/3): https://news.google.com/rss/search?q=%EA%B3%B5%EA%B3%B5%EC%A3%BC%ED%83%9D%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:47:20]   요청 실패(2/3): https://news.google.com/rss/search?q=%EA%B3%B5%EA%B3%B5%EC%A3%BC%ED%83%9D%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:47:33]   요청 실패(3/3): https://news.google.com/rss/search?q=%EA%B3%B5%EA%B3%B5%EC%A3%BC%ED%83%9D%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:47:39]   원문 64건
+[00:47:39]   이슈 묶음 9개 -> 상위 9개 선정
+[00:47:39] 키워드 '부동산정책' 수집 (검색어: 부동산정책)
+[00:47:47]   요청 실패(1/3): https://news.google.com/rss/search?q=%EB%B6%80%EB%8F%99%EC%82%B0%EC%A0%95%EC%B1%85%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:47:57]   요청 실패(2/3): https://news.google.com/rss/search?q=%EB%B6%80%EB%8F%99%EC%82%B0%EC%A0%95%EC%B1%85%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:48:09]   요청 실패(3/3): https://news.google.com/rss/search?q=%EB%B6%80%EB%8F%99%EC%82%B0%EC%A0%95%EC%B1%85%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:48:15]   원문 32건
+[00:48:15]   이슈 묶음 10개 -> 상위 10개 선정
+[00:48:15] 키워드 '재건축·재개발' 수집 (검색어: 재건축, 재개발)
+[00:48:25]   요청 실패(1/3): https://news.google.com/rss/search?q=%EC%9E%AC%EA%B1%B4%EC%B6%95%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:48:37]   요청 실패(2/3): https://news.google.com/rss/search?q=%EC%9E%AC%EA%B1%B4%EC%B6%95%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:48:48]   요청 실패(3/3): https://news.google.com/rss/search?q=%EC%9E%AC%EA%B1%B4%EC%B6%95%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:49:05]   요청 실패(1/3): https://news.google.com/rss/search?q=%EC%9E%AC%EA%B0%9C%EB%B0%9C%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:49:14]   요청 실패(2/3): https://news.google.com/rss/search?q=%EC%9E%AC%EA%B0%9C%EB%B0%9C%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:49:28]   요청 실패(3/3): https://news.google.com/rss/search?q=%EC%9E%AC%EA%B0%9C%EB%B0%9C%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:49:34]   원문 118건
+[00:49:34]   이슈 묶음 17개 -> 상위 10개 선정
+[00:49:34] 키워드 '미분양' 수집 (검색어: 미분양)
+[00:49:43]   요청 실패(1/3): https://news.google.com/rss/search?q=%EB%AF%B8%EB%B6%84%EC%96%91%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:49:53]   요청 실패(2/3): https://news.google.com/rss/search?q=%EB%AF%B8%EB%B6%84%EC%96%91%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:50:03]   요청 실패(3/3): https://news.google.com/rss/search?q=%EB%AF%B8%EB%B6%84%EC%96%91%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:50:09]   원문 40건
+[00:50:09]   이슈 묶음 10개 -> 상위 10개 선정
+[00:50:09] 키워드 '청약·분양' 수집 (검색어: 청약, 분양)
+[00:50:18]   요청 실패(1/3): https://news.google.com/rss/search?q=%EC%B2%AD%EC%95%BD%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:50:28]   요청 실패(2/3): https://news.google.com/rss/search?q=%EC%B2%AD%EC%95%BD%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:50:39]   요청 실패(3/3): https://news.google.com/rss/search?q=%EC%B2%AD%EC%95%BD%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:50:56]   요청 실패(1/3): https://news.google.com/rss/search?q=%EB%B6%84%EC%96%91%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:51:05]   요청 실패(2/3): https://news.google.com/rss/search?q=%EB%B6%84%EC%96%91%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:51:18]   요청 실패(3/3): https://news.google.com/rss/search?q=%EB%B6%84%EC%96%91%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:51:24]   원문 114건
+[00:51:24]   이슈 묶음 18개 -> 상위 10개 선정
+[00:51:24] 키워드 '다주택자' 수집 (검색어: 다주택자)
+[00:51:37]   요청 실패(1/3): https://news.google.com/rss/search?q=%EB%8B%A4%EC%A3%BC%ED%83%9D%EC%9E%90%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:51:45]   요청 실패(2/3): https://news.google.com/rss/search?q=%EB%8B%A4%EC%A3%BC%ED%83%9D%EC%9E%90%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:51:55]   요청 실패(3/3): https://news.google.com/rss/search?q=%EB%8B%A4%EC%A3%BC%ED%83%9D%EC%9E%90%20when%3A1d&hl=ko&gl=KR&ceid=KR:ko :: Exception calling "DownloadData" with "1" argument(s): "The remote server returned an error: (503) Server Unavailable."
+[00:52:01]   원문 44건
+[00:52:01]   이슈 묶음 10개 -> 상위 9개 선정
+[00:52:01] 정부 부동산 정책 보도자료 수집 (국토교통부·금융위원회)
+[00:52:12]   신규 0건 (누적 21건)
+[00:52:12] ===== 완료: 키워드 9개, 기사 87건 저장 =====
